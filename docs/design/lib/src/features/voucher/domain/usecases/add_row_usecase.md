@@ -53,9 +53,9 @@ sequenceDiagram
 | レコード未検出 | [RecordNotFoundException](../../../../core/errors/record_not_found_exception.md) | - | - | `customerId`または`staffId`を指定した場合で、該当レコードが存在しない場合 |
 
 ### 処理詳細
-1. 条件a: `customerId`が指定されている場合、[CustomerRepository.findById](../repositories/customer_repository.md)を呼び出し存在を確認する。
+1. 条件a: `customerId`が指定されている場合、[CustomerRepository.findById](../repositories/customer_repository.md)を呼び出し存在を確認する。\
    条件b: 指定されていない場合、このステップをスキップする。
-2. 条件a: `staffId`が指定されている場合、[StaffRepository.findById](../repositories/staff_repository.md)を呼び出し存在を確認する。
+2. 条件a: `staffId`が指定されている場合、[StaffRepository.findById](../repositories/staff_repository.md)を呼び出し存在を確認する。\
    条件b: 指定されていない場合、このステップをスキップする。
 3. [SheetRowRepository.findMaxRowOrder](../repositories/sheet_row_repository.md)を呼び出し、変数`maxRowOrder`に格納する。
 4. `maxRowOrder`+1を変数`rowOrder`に格納する。

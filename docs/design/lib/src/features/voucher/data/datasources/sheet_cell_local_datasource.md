@@ -55,7 +55,7 @@ sequenceDiagram
    ```sql
    SELECT * FROM t_cell WHERE row_id = :rowId AND column_id = :columnId;
    ```
-   条件a: 取得結果が0件の場合、`null`を返却し処理を終了する。
+   条件a: 取得結果が0件の場合、`null`を返却し処理を終了する。\
    条件b: 取得結果が1件の場合、次のステップへ進む。
 2. 取得した1件を[SheetCellModel.fromMap](../models/sheet_cell_model.md)で変換して返却する。
 

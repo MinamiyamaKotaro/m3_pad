@@ -80,7 +80,7 @@ sequenceDiagram
    ```sql
    SELECT * FROM t_sheet_instance WHERE sheet_instance_id = :sheetInstanceId AND status = 'active';
    ```
-   条件a: 取得結果が0件の場合、`RecordNotFoundException`を送出し処理を終了する。
+   条件a: 取得結果が0件の場合、`RecordNotFoundException`を送出し処理を終了する。\
    条件b: 取得結果が1件の場合、次のステップへ進む。
 2. 取得した1件を[SheetInstanceModel.fromMap](../models/sheet_instance_model.md)で変換して返却する。
 
@@ -112,6 +112,6 @@ sequenceDiagram
    SELECT * FROM t_sheet_instance
    WHERE sheet_template_id = :sheetTemplateId AND business_date = :businessDate AND status = 'active';
    ```
-   条件a: 取得結果が0件の場合、`null`を返却し処理を終了する。
+   条件a: 取得結果が0件の場合、`null`を返却し処理を終了する。\
    条件b: 取得結果が1件の場合、次のステップへ進む。
 2. 取得した1件を[SheetInstanceModel.fromMap](../models/sheet_instance_model.md)で変換して返却する。

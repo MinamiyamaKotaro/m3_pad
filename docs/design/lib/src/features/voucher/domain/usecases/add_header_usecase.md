@@ -62,18 +62,18 @@ sequenceDiagram
 ### 処理詳細
 1. [SheetTemplateRepository.findById](../repositories/sheet_template_repository.md)を呼び出し、`sheetTemplateId`の存在を確認する。
 2. [HeaderTypeRepository.findById](../repositories/header_type_repository.md)を呼び出し、`typeId`の存在を確認する。
-3. 条件a: `isPriced=true`かつ（`initialPrice`が`null`または`effectiveFrom`が`null`）の場合、`ValidationException`を送出し処理を終了する。
+3. 条件a: `isPriced=true`かつ（`initialPrice`が`null`または`effectiveFrom`が`null`）の場合、`ValidationException`を送出し処理を終了する。\
    条件b: それ以外の場合、次のステップへ進む。
-4. [HeaderRepository.findByTemplateId](../repositories/header_repository.md)を呼び出し、変数`existingHeaders`に格納する。
-   条件a: `existingHeaders`が空の場合、変数`displayOrder`に1を格納する。
+4. [HeaderRepository.findByTemplateId](../repositories/header_repository.md)を呼び出し、変数`existingHeaders`に格納する。\
+   条件a: `existingHeaders`が空の場合、変数`displayOrder`に1を格納する。\
    条件b: `existingHeaders`が空でない場合、変数`displayOrder`に`existingHeaders`内の最大`displayOrder`+1を格納する。
 5. [IdGenerator.generate](../../../../core/utils/id_generator.md)を呼び出し、変数`columnId`に格納する。
 6. `sheetTemplateId`・`typeId`・`name`・`displayOrder`・`isPriced`・`status=active`から[Header](../entities/header.md)エンティティを組み立て、変数`header`に格納する。
 7. [HeaderRepository.insert](../repositories/header_repository.md)を`header`で呼び出し、永続化する。
-8. 条件a: `isPriced=true`の場合
-   (1). [IdGenerator.generate](../../../../core/utils/id_generator.md)を呼び出し、変数`priceId`に格納する。
-   (2). `columnId`・`initialPrice`・`effectiveFrom`・`effectiveTo=null`から[HeaderPrice](../entities/header_price.md)エンティティを組み立て、変数`headerPrice`に格納する。
-   (3). [HeaderPriceRepository.insert](../repositories/header_price_repository.md)を`headerPrice`で呼び出し、永続化する。
+8. 条件a: `isPriced=true`の場合\
+   (1). [IdGenerator.generate](../../../../core/utils/id_generator.md)を呼び出し、変数`priceId`に格納する。\
+   (2). `columnId`・`initialPrice`・`effectiveFrom`・`effectiveTo=null`から[HeaderPrice](../entities/header_price.md)エンティティを組み立て、変数`headerPrice`に格納する。\
+   (3). [HeaderPriceRepository.insert](../repositories/header_price_repository.md)を`headerPrice`で呼び出し、永続化する。\
    条件b: `isPriced=false`の場合、このステップをスキップする。
 9. `header`を返却する。
 

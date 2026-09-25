@@ -53,10 +53,10 @@ sequenceDiagram
 
 ### 処理詳細
 1. [HeaderRepository.findById](../repositories/header_repository.md)を呼び出し、`columnId`の存在を確認する。
-2. [HeaderPriceRepository.findCurrentPrice](../repositories/header_price_repository.md)を`columnId`・`effectiveFrom`で呼び出す。
-   条件a: `RecordNotFoundException`が送出された場合（初回登録）、変数`currentPrice`に`null`を格納し、次のステップへ進む。
+2. [HeaderPriceRepository.findCurrentPrice](../repositories/header_price_repository.md)を`columnId`・`effectiveFrom`で呼び出す。\
+   条件a: `RecordNotFoundException`が送出された場合（初回登録）、変数`currentPrice`に`null`を格納し、次のステップへ進む。\
    条件b: 取得できた場合、変数`currentPrice`に格納する。
-3. 条件a: `currentPrice`が`null`でない場合、[HeaderPriceRepository.closeCurrentPrice](../repositories/header_price_repository.md)を`currentPrice.priceId`・`effectiveFrom`で呼び出し、有効期間を終了させる。
+3. 条件a: `currentPrice`が`null`でない場合、[HeaderPriceRepository.closeCurrentPrice](../repositories/header_price_repository.md)を`currentPrice.priceId`・`effectiveFrom`で呼び出し、有効期間を終了させる。\
    条件b: `currentPrice`が`null`の場合、このステップをスキップする。
 4. [IdGenerator.generate](../../../../core/utils/id_generator.md)を呼び出し、変数`priceId`に格納する。
 5. `columnId`・`newPrice`・`effectiveFrom`・`effectiveTo=null`から新しい[HeaderPrice](../entities/header_price.md)エンティティを組み立て、変数`newHeaderPrice`に格納する。

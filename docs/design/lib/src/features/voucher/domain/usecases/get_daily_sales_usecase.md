@@ -46,7 +46,7 @@ sequenceDiagram
 | 業務ルール違反 | [ValidationException](../../../../core/errors/validation_exception.md) | - | - | `dateFrom`が`dateTo`より後の日付である場合 |
 
 ### 処理詳細
-1. 条件a: `dateFrom`が`dateTo`より後の日付である場合、`ValidationException`を送出し処理を終了する。
+1. 条件a: `dateFrom`が`dateTo`より後の日付である場合、`ValidationException`を送出し処理を終了する。\
    条件b: それ以外の場合、次のステップへ進む。
 2. [StaffDailySalesRepository.findByDateRange](../repositories/staff_daily_sales_repository.md)を`dateFrom`・`dateTo`・`staffId`で呼び出し、変数`salesList`に格納する。
 3. `salesList`を返却する。

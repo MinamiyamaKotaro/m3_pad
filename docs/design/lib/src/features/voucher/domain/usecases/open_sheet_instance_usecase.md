@@ -51,8 +51,8 @@ sequenceDiagram
 
 ### 処理詳細
 1. [SheetTemplateRepository.findById](../repositories/sheet_template_repository.md)を呼び出し、`sheetTemplateId`の存在を確認する。
-2. [SheetInstanceRepository.findByTemplateAndDate](../repositories/sheet_instance_repository.md)を`sheetTemplateId`・`businessDate`で呼び出し、変数`existingInstance`に格納する。
-   条件a: `existingInstance`が`null`でない場合、`existingInstance`を返却し処理を終了する。
+2. [SheetInstanceRepository.findByTemplateAndDate](../repositories/sheet_instance_repository.md)を`sheetTemplateId`・`businessDate`で呼び出し、変数`existingInstance`に格納する。\
+   条件a: `existingInstance`が`null`でない場合、`existingInstance`を返却し処理を終了する。\
    条件b: `existingInstance`が`null`の場合、次のステップへ進む。
 3. [IdGenerator.generate](../../../../core/utils/id_generator.md)を呼び出し、変数`sheetInstanceId`に格納する。
 4. `sheetTemplateId`・`businessDate`・`status=active`から[SheetInstance](../entities/sheet_instance.md)エンティティを組み立て、変数`newInstance`に格納する。

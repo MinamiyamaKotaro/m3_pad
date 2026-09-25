@@ -64,14 +64,14 @@ sequenceDiagram
 2. [SheetInstanceRepository.findById](../repositories/sheet_instance_repository.md)を`row.sheetInstanceId`で呼び出し、変数`sheetInstance`に格納する。
 3. [HeaderRepository.findById](../repositories/header_repository.md)を呼び出し、変数`header`に格納する。
 4. [SheetCellRepository.findByRowAndColumn](../repositories/sheet_cell_repository.md)を`rowId`・`columnId`で呼び出し、変数`existingCell`に格納する。
-5. 条件a: `header.isPriced=true`の場合
-   (1). `quantity`が`null`の場合、`ValidationException`を送出し処理を終了する。
-   (2). [HeaderPriceRepository.findCurrentPrice](../repositories/header_price_repository.md)を`columnId`・`sheetInstance.businessDate`で呼び出し、変数`currentPrice`に格納する。
-   (3). `quantity * currentPrice.price`を変数`amount`に格納し、変数`resolvedContent`に`null`を格納する。
-   条件b: `header.isPriced=false`の場合
-   (1). `content`が`null`の場合、`ValidationException`を送出し処理を終了する。
+5. 条件a: `header.isPriced=true`の場合\
+   (1). `quantity`が`null`の場合、`ValidationException`を送出し処理を終了する。\
+   (2). [HeaderPriceRepository.findCurrentPrice](../repositories/header_price_repository.md)を`columnId`・`sheetInstance.businessDate`で呼び出し、変数`currentPrice`に格納する。\
+   (3). `quantity * currentPrice.price`を変数`amount`に格納し、変数`resolvedContent`に`null`を格納する。\
+   条件b: `header.isPriced=false`の場合\
+   (1). `content`が`null`の場合、`ValidationException`を送出し処理を終了する。\
    (2). `quantity`・`amount`に`null`を格納し、変数`resolvedContent`に`content`を格納する。
-6. 条件a: `existingCell`が`null`でない場合、`existingCell.cellId`を引き継いだ[SheetCell](../entities/sheet_cell.md)エンティティを組み立て、変数`cell`に格納し、[SheetCellRepository.update](../repositories/sheet_cell_repository.md)を`cell`で呼び出す。
+6. 条件a: `existingCell`が`null`でない場合、`existingCell.cellId`を引き継いだ[SheetCell](../entities/sheet_cell.md)エンティティを組み立て、変数`cell`に格納し、[SheetCellRepository.update](../repositories/sheet_cell_repository.md)を`cell`で呼び出す。\
    条件b: `existingCell`が`null`の場合、[IdGenerator.generate](../../../../core/utils/id_generator.md)を呼び出して変数`cellId`に格納し、`cellId`を用いた[SheetCell](../entities/sheet_cell.md)エンティティを組み立てて変数`cell`に格納し、[SheetCellRepository.insert](../repositories/sheet_cell_repository.md)を`cell`で呼び出す。
 7. `cell`を返却する。
 

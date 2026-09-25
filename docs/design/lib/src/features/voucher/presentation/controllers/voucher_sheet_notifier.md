@@ -68,14 +68,14 @@ sequenceDiagram
 
 ### 処理詳細
 1. `status=loading`とした状態を反映する。
-2. [OpenSheetInstanceUsecase.call](../../domain/usecases/open_sheet_instance_usecase.md)を`sheetTemplateId`・`businessDate`で呼び出し、変数`instance`に格納する。
-   条件a: 例外が送出された場合、`status=error`・`errorMessage`に例外メッセージを設定した状態を反映し、処理を終了する。
+2. [OpenSheetInstanceUsecase.call](../../domain/usecases/open_sheet_instance_usecase.md)を`sheetTemplateId`・`businessDate`で呼び出し、変数`instance`に格納する。\
+   条件a: 例外が送出された場合、`status=error`・`errorMessage`に例外メッセージを設定した状態を反映し、処理を終了する。\
    条件b: 成功した場合、次のステップへ進む。
 3. `instance.sheetInstanceId`を、以降の`addRow`/`commitCell`/`exportCsv`で使うため、Notifier内部の変数`_sheetInstanceId`に保持する（状態には含めない）。
-4. [GetSheetDetailUsecase.call](../../domain/usecases/get_sheet_detail_usecase.md)を`_sheetInstanceId`で呼び出し、変数`detail`に格納する。
-   条件a: 例外が送出された場合、`status=error`・`errorMessage`に例外メッセージを設定した状態を反映し、処理を終了する。
+4. [GetSheetDetailUsecase.call](../../domain/usecases/get_sheet_detail_usecase.md)を`_sheetInstanceId`で呼び出し、変数`detail`に格納する。\
+   条件a: 例外が送出された場合、`status=error`・`errorMessage`に例外メッセージを設定した状態を反映し、処理を終了する。\
    条件b: 成功した場合、次のステップへ進む。
-5. 条件a: `detail.rows`が空の場合、`status=empty`・`sheetDetail=detail`とした状態を反映する。
+5. 条件a: `detail.rows`が空の場合、`status=empty`・`sheetDetail=detail`とした状態を反映する。\
    条件b: `detail.rows`が空でない場合、`status=success`・`sheetDetail=detail`とした状態を反映する。
 
 ### 変数一覧
@@ -130,8 +130,8 @@ Error状態からの再試行。[load](#load)を再実行する。
 なし（例外は捕捉し、[副作用仕様](#副作用side-effect仕様)の`cellInputFailed`と同様に画面上部のお知らせ表示で通知する）
 
 ### 処理詳細
-1. [AddRowUsecase.call](../../domain/usecases/add_row_usecase.md)を`_sheetInstanceId`・`customerId`・`staffId`で呼び出す。
-   条件a: 例外が送出された場合、`message`に例外メッセージを設定した[VoucherSheetEffect](./voucher_sheet_effect.md)（`kind=cellInputFailed`）を発行し、処理を終了する（画面の状態は`success`のまま維持する）。
+1. [AddRowUsecase.call](../../domain/usecases/add_row_usecase.md)を`_sheetInstanceId`・`customerId`・`staffId`で呼び出す。\
+   条件a: 例外が送出された場合、`message`に例外メッセージを設定した[VoucherSheetEffect](./voucher_sheet_effect.md)（`kind=cellInputFailed`）を発行し、処理を終了する（画面の状態は`success`のまま維持する）。\
    条件b: 成功した場合、次のステップへ進む。
 2. [GetSheetDetailUsecase.call](../../domain/usecases/get_sheet_detail_usecase.md)を`_sheetInstanceId`で呼び出し、変数`detail`に格納する。
 3. `status=success`・`sheetDetail=detail`とした状態を反映する。
@@ -213,10 +213,10 @@ Error状態からの再試行。[load](#load)を再実行する。
 
 ### 処理詳細
 1. `sheetDetail.headers`から`editingColumnId`に一致する列を取得し、変数`header`に格納する。
-2. 条件a: `header.isPriced=true`の場合、`editingText`を数値へ変換し変数`quantity`に格納し、変数`content`に`null`を格納する。
+2. 条件a: `header.isPriced=true`の場合、`editingText`を数値へ変換し変数`quantity`に格納し、変数`content`に`null`を格納する。\
    条件b: `header.isPriced=false`の場合、変数`content`に`editingText`を格納し、変数`quantity`に`null`を格納する。
-3. [InputCellUsecase.call](../../domain/usecases/input_cell_usecase.md)を`editingRowId`・`editingColumnId`・`content`・`quantity`で呼び出す。
-   条件a: 例外が送出された場合、`message`に例外メッセージを設定した[VoucherSheetEffect](./voucher_sheet_effect.md)（`kind=cellInputFailed`）を発行し、次のステップに進まず処理を終了する（編集中の状態は維持し、利用者が再入力できるようにする）。
+3. [InputCellUsecase.call](../../domain/usecases/input_cell_usecase.md)を`editingRowId`・`editingColumnId`・`content`・`quantity`で呼び出す。\
+   条件a: 例外が送出された場合、`message`に例外メッセージを設定した[VoucherSheetEffect](./voucher_sheet_effect.md)（`kind=cellInputFailed`）を発行し、次のステップに進まず処理を終了する（編集中の状態は維持し、利用者が再入力できるようにする）。\
    条件b: 成功した場合、次のステップへ進む。
 4. [GetSheetDetailUsecase.call](../../domain/usecases/get_sheet_detail_usecase.md)を`_sheetInstanceId`で呼び出し、変数`detail`に格納する。
 5. `status=success`・`sheetDetail=detail`・`editingRowId=null`・`editingColumnId=null`・`editingText=null`とした状態を反映する。
@@ -251,8 +251,8 @@ Error状態からの再試行。[load](#load)を再実行する。
 
 ### 処理詳細
 1. `isExporting=true`とした状態を反映する。
-2. [ExportDailySheetToCsvUsecase.call](../../domain/usecases/export_daily_sheet_to_csv_usecase.md)を`_sheetInstanceId`で呼び出し、変数`csvContent`に格納する。
-   条件a: 例外が送出された場合、`message`に例外メッセージを設定した[VoucherSheetEffect](./voucher_sheet_effect.md)（`kind=exportFailed`）を発行する。
+2. [ExportDailySheetToCsvUsecase.call](../../domain/usecases/export_daily_sheet_to_csv_usecase.md)を`_sheetInstanceId`で呼び出し、変数`csvContent`に格納する。\
+   条件a: 例外が送出された場合、`message`に例外メッセージを設定した[VoucherSheetEffect](./voucher_sheet_effect.md)（`kind=exportFailed`）を発行する。\
    条件b: 成功した場合、`csvContent`と固定文言「CSV出力が完了しました」を`message`に設定した[VoucherSheetEffect](./voucher_sheet_effect.md)（`kind=exportSucceeded`）を発行する。
 3. `isExporting=false`とした状態を反映する。
 

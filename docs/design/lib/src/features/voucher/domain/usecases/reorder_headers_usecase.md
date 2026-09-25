@@ -47,7 +47,7 @@ sequenceDiagram
 
 ### 処理詳細
 1. [HeaderRepository.findByTemplateId](../repositories/header_repository.md)を呼び出し、変数`existingHeaders`に格納する。
-2. 条件a: `orderedColumnIds`の件数と`existingHeaders`の件数が一致しない場合、`ValidationException`を送出し処理を終了する。
+2. 条件a: `orderedColumnIds`の件数と`existingHeaders`の件数が一致しない場合、`ValidationException`を送出し処理を終了する。\
    条件b: 一致する場合、次のステップへ進む。
 3. `orderedColumnIds`のインデックス（0始まり）+1を表示順とした、列IDと表示順の対応を変数`displayOrderByColumnId`（メモリ内のMap）に組み立てる。
 4. [HeaderRepository.updateDisplayOrders](../repositories/header_repository.md)を`displayOrderByColumnId`で呼び出し、一括更新する。

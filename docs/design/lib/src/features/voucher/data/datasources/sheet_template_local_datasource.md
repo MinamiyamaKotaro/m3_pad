@@ -80,7 +80,7 @@ sequenceDiagram
    ```sql
    SELECT * FROM m_sheet_template WHERE sheet_template_id = :sheetTemplateId AND status = 'active';
    ```
-   条件a: 取得結果が0件の場合、`RecordNotFoundException`を送出し処理を終了する。
+   条件a: 取得結果が0件の場合、`RecordNotFoundException`を送出し処理を終了する。\
    条件b: 取得結果が1件の場合、次のステップへ進む。
 2. 取得した1件を[SheetTemplateModel.fromMap](../models/sheet_template_model.md)で変換して返却する。
 
