@@ -1,0 +1,4 @@
+# 詳細設計書のみ
+docs/*
+!docs/design/
+
