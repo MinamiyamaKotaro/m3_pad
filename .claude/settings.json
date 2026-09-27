@@ -17,11 +17,6 @@
           },
           {
             "type": "prompt",
-            "if": "Edit(src/lib/**)",
-            "prompt": "直近で変更されたファイル（ツールコンテキストから特定してください）が、`src/agents.md` に記載されているルールに完全に準拠しているか、以下の観点ごとに個別に確認してください。\n\n1. 設計との整合性: `docs/design`配下の対応する設計ドキュメント（`lib/`配下の構成に対応するもの）の内容と実装が一致しているか\n2. lintルール: `src/agents.md`のyamlブロックに列挙されている`linter.rules`（例: シングルクォート使用、相対importを優先、finalパラメータの付与、型注釈を常に明示、等）に違反していないか\n3. テストコード（`*_test.dart`）の場合: `src/skills/dart-add-unit-test/SKILL.md`・`src/skills/dart-generate-test-mocks/SKILL.md`の手順（`test/`配下への配置、`group`/`test`/`setUp`の利用、モックが必要な場合は`@GenerateNiceMocks`の利用等）に沿っているか\n4. dartdocコメントを書いている場合: `src/skills/dart-use-doc-examples/SKILL.md`の記法（`{@example}`ディレクティブ等）に従い、日本語で記述されているか\n\n違反または考慮漏れがある場合は 'no' と答え、該当する観点番号を明記した上で、具体的にどの箇所をどう直すべきかを箇条書きで指摘してください。対象外の観点（例: テストファイルでない場合のテスト観点チェック）はスキップしてください。すべての該当観点に完全に準拠している場合のみ 'yes' と答えてください。"
-          },
-          {
-            "type": "prompt",
             "if": "Write(src/lib/**)",
             "prompt": "直近で変更されたファイル（ツールコンテキストから特定してください）が、`src/agents.md` に記載されているルールに完全に準拠しているか、以下の観点ごとに個別に確認してください。\n\n1. 設計との整合性: `docs/design`配下の対応する設計ドキュメント（`lib/`配下の構成に対応するもの）の内容と実装が一致しているか\n2. lintルール: `src/agents.md`のyamlブロックに列挙されている`linter.rules`（例: シングルクォート使用、相対importを優先、finalパラメータの付与、型注釈を常に明示、等）に違反していないか\n3. テストコード（`*_test.dart`）の場合: `src/skills/dart-add-unit-test/SKILL.md`・`src/skills/dart-generate-test-mocks/SKILL.md`の手順（`test/`配下への配置、`group`/`test`/`setUp`の利用、モックが必要な場合は`@GenerateNiceMocks`の利用等）に沿っているか\n4. dartdocコメントを書いている場合: `src/skills/dart-use-doc-examples/SKILL.md`の記法（`{@example}`ディレクティブ等）に従い、日本語で記述されているか\n\n違反または考慮漏れがある場合は 'no' と答え、該当する観点番号を明記した上で、具体的にどの箇所をどう直すべきかを箇条書きで指摘してください。対象外の観点（例: テストファイルでない場合のテスト観点チェック）はスキップしてください。すべての該当観点に完全に準拠している場合のみ 'yes' と答えてください。"
           }
