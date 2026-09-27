@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "src/**"
+      - ".github/workflows/ci.yml"
+  pull_request:
+    paths:
+      - "src/**"
+      - ".github/workflows/ci.yml"
+
+defaults:
+  run:
+    working-directory: src
+
+env:
+  FLUTTER_CHANNEL: stable
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: ${{ env.FLUTTER_CHANNEL }}
+          cache: true
+      - run: flutter pub get
+      - name: dart format
+        run: dart format --output=none --set-exit-if-changed .
+      - name: flutter analyze
+        run: flutter analyze --fatal-infos
+
+  unittest:
+    name: Unit Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: ${{ env.FLUTTER_CHANNEL }}
+          cache: true
+      - run: flutter pub get
+      - name: flutter test
+        run: flutter test
+
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: ${{ env.FLUTTER_CHANNEL }}
+          cache: true
+      - run: flutter pub get
+      - name: flutter test --coverage
+        run: flutter test --coverage
+      - name: Upload lcov report
+        uses: actions/upload-artifact@v4
+        with:
+          name: lcov-report
+          path: src/coverage/lcov.info
+          if-no-files-found: error
