@@ -3,6 +3,7 @@
 | 新規作成・更新日 | 作成・更新者名 | 作成・更新内容 |
 |---|---|---|
 | 2026-09-25 | minamiyama | 新規作成 |
+| 2026-09-27 | minamiyama | `update`を追加 |
 
 ## 処理概要
 
@@ -18,6 +19,8 @@ sequenceDiagram
 
     U->>Impl: insert(row)
     Impl->>D: insert(SheetRowModel化)
+    U->>Impl: update(row)
+    Impl->>D: update(SheetRowModel化)
     U->>Impl: findById(rowId)
     Impl->>D: findById(rowId)
     U->>Impl: findMaxRowOrder(sheetInstanceId)
@@ -49,6 +52,32 @@ sequenceDiagram
 
 ### 処理詳細
 1. `row`を[SheetRowModel](../models/sheet_row_model.md)へ変換し、[SheetRowLocalDataSource.insert](../datasources/sheet_row_local_datasource.md)を呼び出す。
+
+## update
+
+### 処理概要
+[SheetRowLocalDataSource.update](../datasources/sheet_row_local_datasource.md)に処理を委譲する。
+
+### input
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | バリデーション | 備考 |
+|---|---|---|---|---|---|
+| 行 | row | - | [SheetRow](../../domain/entities/sheet_row.md) | 必須 | - |
+
+### output
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | 備考 |
+|---|---|---|---|---|
+| - | - | - | void | - |
+
+### exception
+
+| exception論理名 | exception物理名 | エラーコード | エラーメッセージ | 備考 |
+|---|---|---|---|---|
+| レコード未検出 | [RecordNotFoundException](../../../../core/errors/record_not_found_exception.md) | - | - | [SheetRowLocalDataSource.update](../datasources/sheet_row_local_datasource.md)からそのまま伝播 |
+
+### 処理詳細
+1. `row`を[SheetRowModel](../models/sheet_row_model.md)へ変換し、[SheetRowLocalDataSource.update](../datasources/sheet_row_local_datasource.md)を呼び出す。
 
 ## findById
 

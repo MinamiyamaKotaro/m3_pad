@@ -4,11 +4,12 @@
 |---|---|---|
 | 2026-09-25 | minamiyama | 新規作成 |
 | 2026-09-25 | minamiyama | agents.md階層改訂に伴い`domain/entities/enums/`へ移動 |
+| 2026-09-27 | minamiyama | [StaffShift](../staff_shift.md)を対象エンティティに追加 |
 
 ## 概要
 
 論理削除フラグ（DB上の`status`カラム、CHECK制約 `active` / `deleted`）をアプリ層で型安全に扱うための共有enum。
-[SheetTemplate](../sheet_template.md)・[Header](../header.md)・[SheetInstance](../sheet_instance.md)・[Customer](../customer.md)・[Staff](../staff.md)・[SheetRow](../sheet_row.md)の`status`フィールドの型として使用する。物理削除は行わず、`deleted`への更新のみで論理削除を表現する（[db_schema.md](../../../../../../../../requried/db_schema.md) §9 運用ルール参照）。
+[SheetTemplate](../sheet_template.md)・[Header](../header.md)・[SheetInstance](../sheet_instance.md)・[Customer](../customer.md)・[Staff](../staff.md)・[SheetRow](../sheet_row.md)・[StaffShift](../staff_shift.md)の`status`フィールドの型として使用する。物理削除は行わず、`deleted`への更新のみで論理削除を表現する（[db_schema.md](../../../../../../../../requried/db_schema.md) §9 運用ルール参照）。
 
 ## 依存関係シーケンス図
 
@@ -25,6 +26,7 @@ classDiagram
     Customer --> RecordStatus : status
     Staff --> RecordStatus : status
     SheetRow --> RecordStatus : status
+    StaffShift --> RecordStatus : status
 ```
 
 ## 項目一覧

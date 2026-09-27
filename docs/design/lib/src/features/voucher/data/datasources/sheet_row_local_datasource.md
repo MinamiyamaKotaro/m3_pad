@@ -3,10 +3,11 @@
 | 新規作成・更新日 | 作成・更新者名 | 作成・更新内容 |
 |---|---|---|
 | 2026-09-25 | minamiyama | 新規作成 |
+| 2026-09-27 | minamiyama | `insert`に`payment_method`カラムを追加。`update`を追加（お名前・担当・決済方法の後からの変更に対応） |
 
 ## 処理概要
 
-`t_row`テーブルに対する実際のSQL実行を担うローカルデータソース。[SheetRowRepositoryImpl](../repositories/sheet_row_repository_impl.md)から呼び出され、[SheetRowModel](../models/sheet_row_model.md)を介してSQLiteの行とやり取りする。`total_amount`はDBトリガー（[db_schema.md](../../../../../../../requried/db_schema.md) §7 `trg_t_cell_ai/au/ad`）により[SheetCell](../../domain/entities/sheet_cell.md)の変更に追従して自動更新されるため、本データソースに更新用メソッドは設けない。
+`t_row`テーブルに対する実際のSQL実行を担うローカルデータソース。[SheetRowRepositoryImpl](../repositories/sheet_row_repository_impl.md)から呼び出され、[SheetRowModel](../models/sheet_row_model.md)を介してSQLiteの行とやり取りする。`total_amount`はDBトリガー（[db_schema.md](../../../../../../../requried/db_schema.md) §7 `trg_t_cell_ai/au/ad`）により[SheetCell](../../domain/entities/sheet_cell.md)の変更に追従して自動更新されるため、`update`の対象には含めない。
 
 ## 処理シーケンス図
 
@@ -18,6 +19,8 @@ sequenceDiagram
 
     R->>D: insert(model)
     D->>DB: INSERT INTO t_row ...
+    R->>D: update(model)
+    D->>DB: UPDATE t_row SET customer_id=?, staff_id=?, payment_method=?, updated_at=? WHERE row_id=?
     R->>D: findById(rowId)
     D->>DB: SELECT * FROM t_row WHERE row_id = ?
     R->>D: findMaxRowOrder(sheetInstanceId)
@@ -50,9 +53,42 @@ sequenceDiagram
 ### 処理詳細
 1. `model.toMap`で変換した`Map`を値としたINSERT文をDBに対して1回発行する。
    ```sql
-   INSERT INTO t_row (row_id, sheet_instance_id, customer_id, staff_id, row_order, total_amount, status, created_at, updated_at)
-   VALUES (:rowId, :sheetInstanceId, :customerId, :staffId, :rowOrder, :totalAmount, :status, :createdAt, :updatedAt);
+   INSERT INTO t_row (row_id, sheet_instance_id, customer_id, staff_id, row_order, total_amount, payment_method, status, created_at, updated_at)
+   VALUES (:rowId, :sheetInstanceId, :customerId, :staffId, :rowOrder, :totalAmount, :paymentMethod, :status, :createdAt, :updatedAt);
    ```
+
+## update
+
+### 処理概要
+既存の[SheetRowModel](../models/sheet_row_model.md)の`customer_id`・`staff_id`・`payment_method`を上書きする。
+
+### input
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | バリデーション | 備考 |
+|---|---|---|---|---|---|
+| 行 | model | - | [SheetRowModel](../models/sheet_row_model.md) | 必須 | - |
+
+### output
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | 備考 |
+|---|---|---|---|---|
+| - | - | - | void | - |
+
+### exception
+
+| exception論理名 | exception物理名 | エラーコード | エラーメッセージ | 備考 |
+|---|---|---|---|---|
+| レコード未検出 | [RecordNotFoundException](../../../../core/errors/record_not_found_exception.md) | - | - | 対象の`row_id`が存在しない場合（UPDATE文の影響行数が0件） |
+
+### 処理詳細
+1. 以下のSQLをDBに対して1回発行する。
+   ```sql
+   UPDATE t_row
+   SET customer_id = :customerId, staff_id = :staffId, payment_method = :paymentMethod, updated_at = :updatedAt
+   WHERE row_id = :rowId AND status = 'active';
+   ```
+   条件a: 影響行数が0件の場合、`RecordNotFoundException`を送出する。\
+   条件b: 影響行数が1件の場合、正常終了とする。
 
 ## findById
 

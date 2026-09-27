@@ -4,10 +4,11 @@
 |---|---|---|
 | 2026-09-25 | minamiyama | 新規作成 |
 | 2026-09-25 | minamiyama | agents.md階層改訂に伴い`core/errors/`へ移動 |
+| 2026-09-27 | minamiyama | [UpdateStaffShiftUsecase](../../features/voucher/domain/usecases/update_staff_shift_usecase.md)を送出元に追加 |
 
 ## 概要
 
-DBの制約（NOT NULL・CHECK等）では表現できない業務ルール違反（例: 価格対象の列に単価未指定、並び替え対象件数の不一致、数量未入力等）が発生した場合にusecase層（[`domain/usecases/`](../../features/voucher/domain/usecases/)）が送出する共有の例外クラス。ルールごとに専用の例外クラスを作らず、`reason`に違反内容の説明文を保持する汎用クラスとして表現する。
+DBの制約（NOT NULL・CHECK等）では表現できない業務ルール違反（例: 価格対象の列に単価未指定、並び替え対象件数の不一致、数量未入力、就業時刻の形式不正等）が発生した場合にusecase層（[`domain/usecases/`](../../features/voucher/domain/usecases/)）が送出する共有の例外クラス。ルールごとに専用の例外クラスを作らず、`reason`に違反内容の説明文を保持する汎用クラスとして表現する。
 
 ## 依存関係シーケンス図
 
@@ -18,6 +19,7 @@ classDiagram
     ReorderHeadersUsecase ..> ValidationException : throws
     InputCellUsecase ..> ValidationException : throws
     GetDailySalesUsecase ..> ValidationException : throws
+    UpdateStaffShiftUsecase ..> ValidationException : throws
 ```
 
 ## 項目一覧

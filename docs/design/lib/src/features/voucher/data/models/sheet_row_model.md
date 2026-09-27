@@ -3,6 +3,7 @@
 | 新規作成・更新日 | 作成・更新者名 | 作成・更新内容 |
 |---|---|---|
 | 2026-09-25 | minamiyama | 新規作成 |
+| 2026-09-27 | minamiyama | `payment_method`カラムのマッピングを追加 |
 
 ## 概要
 
@@ -39,7 +40,7 @@ SQLiteの行（`Map<String, dynamic>`）から`SheetRowModel`を生成する。
 なし
 
 ### 処理詳細
-1. `map['row_id']`→`rowId`、`map['sheet_instance_id']`→`sheetInstanceId`、`map['customer_id']`（`null`許容）→`customerId`、`map['staff_id']`（`null`許容）→`staffId`、`map['row_order']`→`rowOrder`、`map['total_amount']`→`totalAmount`、`map['status']`→`RecordStatus`へ変換して`status`、`map['created_at']`/`map['updated_at']`→DateTimeへ変換してそれぞれ対応付け、`SheetRowModel`を生成する。
+1. `map['row_id']`→`rowId`、`map['sheet_instance_id']`→`sheetInstanceId`、`map['customer_id']`（`null`許容）→`customerId`、`map['staff_id']`（`null`許容）→`staffId`、`map['row_order']`→`rowOrder`、`map['total_amount']`→`totalAmount`、`map['payment_method']`（`null`許容）→`PaymentMethod`へ変換して`paymentMethod`、`map['status']`→`RecordStatus`へ変換して`status`、`map['created_at']`/`map['updated_at']`→DateTimeへ変換してそれぞれ対応付け、`SheetRowModel`を生成する。
 2. 生成したインスタンスを返却する。
 
 ## toMap

@@ -3,6 +3,7 @@
 | 新規作成・更新日 | 作成・更新者名 | 作成・更新内容 |
 |---|---|---|
 | 2026-09-25 | minamiyama | 新規作成 |
+| 2026-09-27 | minamiyama | スタッフ欄の就業時刻ボタン編集用に`editingStaffShiftId`・`editingStaffShiftField`を追加（[agents.md](../../../../../../../requried/agents.md)のスタッフ欄仕様を反映） |
 
 ## 概要
 
@@ -44,3 +45,5 @@ classDiagram
 | 編集中の列ID | editingColumnId | optional | string | 任意 | セル編集中のみ非`null`。テキスト入力欄の現在値の一部 |
 | 編集中の入力テキスト | editingText | optional | string | 任意 | セル編集中のテキストフィールドの現在値（未確定の入力中の値） |
 | CSV出力中フラグ | isExporting | - | bool | 必須 | デフォルト`false`。[ExportDailySheetToCsvUsecase](../../domain/usecases/export_daily_sheet_to_csv_usecase.md)実行中は`true` |
+| 編集中のシフトID | editingStaffShiftId | optional | string | 任意 | [VoucherStaffBar](../widgets/voucher_staff_bar.md)の就業時刻ボタンをタップして編集中の場合のみ非`null`（[StaffShift.shiftId](../../domain/entities/staff_shift.md)） |
+| 編集中のシフト項目 | editingStaffShiftField | optional | string | 任意 | `'start'`または`'end'`。`editingStaffShiftId`が非`null`の場合のみ使用し、開始・終了どちらの時刻ボタンが編集中かを表す |

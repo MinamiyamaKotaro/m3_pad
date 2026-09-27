@@ -4,6 +4,7 @@
 |---|---|---|
 | 2026-09-25 | minamiyama | 新規作成 |
 | 2026-09-25 | minamiyama | agents.md階層改訂に伴い`core/errors/`へ移動 |
+| 2026-09-27 | minamiyama | [StaffShiftLocalDataSource](../../features/voucher/data/datasources/staff_shift_local_datasource.md)を送出元に追加 |
 
 ## 概要
 
@@ -21,6 +22,7 @@ classDiagram
     CustomerLocalDataSource ..> RecordNotFoundException : throws
     StaffLocalDataSource ..> RecordNotFoundException : throws
     SheetRowLocalDataSource ..> RecordNotFoundException : throws
+    StaffShiftLocalDataSource ..> RecordNotFoundException : throws
 ```
 
 ## 項目一覧

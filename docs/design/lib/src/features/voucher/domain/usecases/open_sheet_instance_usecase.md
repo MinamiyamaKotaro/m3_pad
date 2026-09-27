@@ -3,10 +3,11 @@
 | 新規作成・更新日 | 作成・更新者名 | 作成・更新内容 |
 |---|---|---|
 | 2026-09-25 | minamiyama | 新規作成 |
+| 2026-09-27 | minamiyama | 伝票インスタンス新規作成時に、右上「スタッフ」欄の空シフト枠を3件自動作成する処理を追加（[agents.md](../../../../../../../requried/agents.md)のスタッフ欄仕様を反映） |
 
 ## 処理概要
 
-指定した伝票フォーマット・営業日の伝票インスタンス（[SheetInstance](../entities/sheet_instance.md)）を取得する。存在しない場合は新規作成する（FR-1、FR-2）。[SheetTemplateRepository](../repositories/sheet_template_repository.md)・[SheetInstanceRepository](../repositories/sheet_instance_repository.md)・[IdGenerator](../../../../core/utils/id_generator.md)に依存する。
+指定した伝票フォーマット・営業日の伝票インスタンス（[SheetInstance](../entities/sheet_instance.md)）を取得する。存在しない場合は新規作成し、あわせて紙伝票の「(氏名) ~ D」形式の行が3行であることに合わせて、空の[StaffShift](../entities/staff_shift.md)を3件作成する（FR-1、FR-2）。[SheetTemplateRepository](../repositories/sheet_template_repository.md)・[SheetInstanceRepository](../repositories/sheet_instance_repository.md)・[StaffShiftRepository](../repositories/staff_shift_repository.md)・[IdGenerator](../../../../core/utils/id_generator.md)に依存する。
 
 ## 処理シーケンス図
 
@@ -16,6 +17,7 @@ sequenceDiagram
     participant U as OpenSheetInstanceUsecase
     participant TR as SheetTemplateRepository
     participant SIR as SheetInstanceRepository
+    participant SSR as StaffShiftRepository
     participant G as IdGenerator
 
     C->>U: call(sheetTemplateId, businessDate)
@@ -23,6 +25,10 @@ sequenceDiagram
     U->>SIR: findByTemplateAndDate(sheetTemplateId, businessDate)
     U->>G: generate()
     U->>SIR: insert(instance)
+    loop 3回
+        U->>G: generate()
+        U->>SSR: insert(shift)
+    end
 ```
 
 ## call
@@ -57,7 +63,8 @@ sequenceDiagram
 3. [IdGenerator.generate](../../../../core/utils/id_generator.md)を呼び出し、変数`sheetInstanceId`に格納する。
 4. `sheetTemplateId`・`businessDate`・`status=active`から[SheetInstance](../entities/sheet_instance.md)エンティティを組み立て、変数`newInstance`に格納する。
 5. [SheetInstanceRepository.insert](../repositories/sheet_instance_repository.md)を`newInstance`で呼び出し、永続化する。
-6. `newInstance`を返却する。
+6. 3回繰り返す: [IdGenerator.generate](../../../../core/utils/id_generator.md)を呼び出して`shiftId`を採番し、`sheetInstanceId=newInstance.sheetInstanceId`・`staffId=null`・`startTime=null`・`endTime=null`・`drinkBack=null`・`status=active`から[StaffShift](../entities/staff_shift.md)を組み立て、[StaffShiftRepository.insert](../repositories/staff_shift_repository.md)で永続化する（氏名・時刻は未入力のまま作成し、画面側（[VoucherStaffBar](../../presentation/widgets/voucher_staff_bar.md)）で就業時刻ボタンの初期値として現在時刻を表示する）。
+7. `newInstance`を返却する。
 
 ### 変数一覧
 
@@ -66,3 +73,4 @@ sequenceDiagram
 | 既存の伝票インスタンス | existingInstance | [SheetInstance](../entities/sheet_instance.md)? | [SheetInstanceRepository.findByTemplateAndDate](../repositories/sheet_instance_repository.md)の返却値 | 未作成の場合は`null` |
 | 伝票インスタンスID | sheetInstanceId | string | [IdGenerator.generate](../../../../core/utils/id_generator.md)の返却値 | ULID形式 |
 | 新規の伝票インスタンス | newInstance | [SheetInstance](../entities/sheet_instance.md) | ステップ4で組み立てたエンティティ | - |
+| シフトID | shiftId | string | [IdGenerator.generate](../../../../core/utils/id_generator.md)の返却値（ステップ6でループ3回分） | ULID形式 |

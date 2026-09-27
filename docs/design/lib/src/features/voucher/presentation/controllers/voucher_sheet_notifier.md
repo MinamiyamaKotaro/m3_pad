@@ -3,10 +3,11 @@
 | 新規作成・更新日 | 作成・更新者名 | 作成・更新内容 |
 |---|---|---|
 | 2026-09-25 | minamiyama | 新規作成 |
+| 2026-09-27 | minamiyama | お名前の更新を[commitCell](#commitcell)に統合し、担当・決済方法の更新（[setRowStaff](#setrowstaff)・[setRowPaymentMethod](#setrowpaymentmethod)）、スタッフ欄の更新（[setStaffShiftName](#setstaffshiftname)・[startEditingStaffShiftTime](#starteditingstaffshifttime)・[commitStaffShiftTime](#commitstaffshifttime)・[setStaffShiftDrinkBack](#setstaffshiftdrinkback)）を追加（[agents.md](../../../../../../../requried/agents.md)を反映） |
 
 ## 処理概要
 
-伝票入力画面（`ENT_001_VOUCHER`）の状態（[VoucherSheetState](./voucher_sheet_state.md)）を管理するRiverpod Notifier。伝票インスタンスの読込・行追加・セル入力・CSV出力（FR-1〜FR-3）を担う。`sheetTemplateId`・`businessDate`はコンストラクタ引数として受け取り、`sheetInstanceId`は`load`実行後にNotifier内部（状態外）で保持する。
+伝票入力画面（`ENT_001_VOUCHER`）の状態（[VoucherSheetState](./voucher_sheet_state.md)）を管理するRiverpod Notifier。伝票インスタンスの読込・行追加・セル入力・行の付帯情報（お名前・担当・決済方法）更新・スタッフ欄更新・CSV出力（FR-1〜FR-3）を担う。`sheetTemplateId`・`businessDate`はコンストラクタ引数として受け取り、`sheetInstanceId`は`load`実行後にNotifier内部（状態外）で保持する。
 
 ## 依存
 
@@ -14,6 +15,8 @@
 - [GetSheetDetailUsecase](../../domain/usecases/get_sheet_detail_usecase.md)（Domain層）
 - [AddRowUsecase](../../domain/usecases/add_row_usecase.md)（Domain層）
 - [InputCellUsecase](../../domain/usecases/input_cell_usecase.md)（Domain層）
+- [UpdateRowUsecase](../../domain/usecases/update_row_usecase.md)（Domain層）
+- [UpdateStaffShiftUsecase](../../domain/usecases/update_staff_shift_usecase.md)（Domain層）
 - [ExportDailySheetToCsvUsecase](../../domain/usecases/export_daily_sheet_to_csv_usecase.md)（Domain層）
 
 ## 処理シーケンス図
@@ -26,6 +29,8 @@ sequenceDiagram
     participant GSD as GetSheetDetailUsecase
     participant AR as AddRowUsecase
     participant IC as InputCellUsecase
+    participant UR as UpdateRowUsecase
+    participant USS as UpdateStaffShiftUsecase
     participant EDC as ExportDailySheetToCsvUsecase
 
     P->>N: load()
@@ -41,6 +46,15 @@ sequenceDiagram
 
     P->>N: commitCell()
     N->>IC: call(rowId, columnId, content, quantity)
+    N->>UR: call(current, customerName)（editingColumnId='customerName'の場合）
+    N->>GSD: call(sheetInstanceId)
+
+    P->>N: setRowStaff(rowId, staffId) / setRowPaymentMethod(rowId, paymentMethod)
+    N->>UR: call(current, staffId) / call(current, paymentMethod)
+    N->>GSD: call(sheetInstanceId)
+
+    P->>N: setStaffShiftName(...) / commitStaffShiftTime(...) / setStaffShiftDrinkBack(...)
+    N->>USS: call(current, ...)
     N->>GSD: call(sheetInstanceId)
 
     P->>N: exportCsv()
@@ -195,7 +209,7 @@ Error状態からの再試行。[load](#load)を再実行する。
 ## commitCell
 
 ### 処理概要
-編集中セルの入力を確定し、[InputCellUsecase](../../domain/usecases/input_cell_usecase.md)へ保存する。列の価格対象フラグに応じて`content`または`quantity`のいずれかとして送信する。
+編集中セルの入力を確定し保存する。`editingColumnId`が実在の列IDの場合は[InputCellUsecase](../../domain/usecases/input_cell_usecase.md)へ、特別な値`'customerName'`（「お名前」列。[VoucherDataRow](../widgets/voucher_data_row.md)が`onCellTap`にこの値を渡す）の場合は[UpdateRowUsecase](../../domain/usecases/update_row_usecase.md)へ保存する。列の価格対象フラグに応じて`content`または`quantity`のいずれかとして送信する。
 
 ### input
 
@@ -212,10 +226,12 @@ Error状態からの再試行。[load](#load)を再実行する。
 なし（例外は捕捉し、[副作用仕様](#副作用side-effect仕様)で通知する）
 
 ### 処理詳細
-1. `sheetDetail.headers`から`editingColumnId`に一致する列を取得し、変数`header`に格納する。
-2. 条件a: `header.isPriced=true`の場合、`editingText`を数値へ変換し変数`quantity`に格納し、変数`content`に`null`を格納する。\
-   条件b: `header.isPriced=false`の場合、変数`content`に`editingText`を格納し、変数`quantity`に`null`を格納する。
-3. [InputCellUsecase.call](../../domain/usecases/input_cell_usecase.md)を`editingRowId`・`editingColumnId`・`content`・`quantity`で呼び出す。\
+1. 条件a: `editingColumnId`が`'customerName'`の場合、`sheetDetail.rows`から`editingRowId`に一致する行を取得し変数`currentRow`に格納したうえで、[UpdateRowUsecase.call](../../domain/usecases/update_row_usecase.md)を`current=currentRow`・`customerName=editingText`で呼び出し、ステップ4へ進む。\
+   条件b: 上記以外の場合、次のステップへ進む（通常のセル入力）。
+2. `sheetDetail.headers`から`editingColumnId`に一致する列を取得し、変数`header`に格納する。
+3. 条件a: `header.isPriced=true`の場合、`editingText`を数値へ変換し変数`quantity`に格納し、変数`content`に`null`を格納する。\
+   条件b: `header.isPriced=false`の場合、変数`content`に`editingText`を格納し、変数`quantity`に`null`を格納する。\
+   続けて[InputCellUsecase.call](../../domain/usecases/input_cell_usecase.md)を`editingRowId`・`editingColumnId`・`content`・`quantity`で呼び出す。\
    条件a: 例外が送出された場合、`message`に例外メッセージを設定した[VoucherSheetEffect](./voucher_sheet_effect.md)（`kind=cellInputFailed`）を発行し、次のステップに進まず処理を終了する（編集中の状態は維持し、利用者が再入力できるようにする）。\
    条件b: 成功した場合、次のステップへ進む。
 4. [GetSheetDetailUsecase.call](../../domain/usecases/get_sheet_detail_usecase.md)を`_sheetInstanceId`で呼び出し、変数`detail`に格納する。
@@ -225,10 +241,180 @@ Error状態からの再試行。[load](#load)を再実行する。
 
 | 変数論理名 | 変数物理名 | データ型 | 格納値 | 備考欄 |
 |---|---|---|---|---|
+| 編集中の行 | currentRow | [SheetRow](../../domain/entities/sheet_row.md) | `sheetDetail.rows`から検索した対象行 | `editingColumnId='customerName'`の場合のみ使用 |
 | 列 | header | [Header](../../domain/entities/header.md) | `sheetDetail.headers`から検索した対象列 | - |
 | 数量 | quantity | int? | `editingText`の数値変換結果、または`isPriced=false`の場合は`null` | - |
 | 内容 | content | string? | `editingText`、または`isPriced=true`の場合は`null` | - |
 | 伝票詳細 | detail | [SheetDetail](../../domain/entities/sheet_detail.md) | [GetSheetDetailUsecase.call](../../domain/usecases/get_sheet_detail_usecase.md)の返却値 | 再読込した最新の表示データ |
+
+## setRowStaff
+
+### 処理概要
+「担当」列プルダウンでの選択確定時に呼び出され、[UpdateRowUsecase](../../domain/usecases/update_row_usecase.md)で行の担当スタッフを更新する（フリーテキスト編集ではなくプルダウン即時確定のため、`startEditingCell`/`commitCell`は使わない）。
+
+### input
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | バリデーション | 備考 |
+|---|---|---|---|---|---|
+| 行ID | rowId | - | string | 必須 | - |
+| スタッフID | staffId | optional | string | 任意 | 「未定」選択時は`null` |
+
+### output
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | 備考 |
+|---|---|---|---|---|
+| - | - | - | void | 結果は[VoucherSheetState](./voucher_sheet_state.md)の更新として反映される |
+
+### exception
+
+なし（例外は捕捉し、[副作用仕様](#副作用side-effect仕様)の`cellInputFailed`と同様に通知する）
+
+### 処理詳細
+1. `sheetDetail.rows`から`rowId`に一致する行を取得し、変数`currentRow`に格納する。
+2. [UpdateRowUsecase.call](../../domain/usecases/update_row_usecase.md)を`current=currentRow`・`staffId=staffId`で呼び出す。\
+   条件a: 例外が送出された場合、`message`に例外メッセージを設定した[VoucherSheetEffect](./voucher_sheet_effect.md)（`kind=cellInputFailed`）を発行し、処理を終了する。\
+   条件b: 成功した場合、次のステップへ進む。
+3. [GetSheetDetailUsecase.call](../../domain/usecases/get_sheet_detail_usecase.md)を`_sheetInstanceId`で呼び出し、変数`detail`に格納する。
+4. `status=success`・`sheetDetail=detail`とした状態を反映する。
+
+## setRowPaymentMethod
+
+### 処理概要
+「合計金額」列に隣接する「P」「カ」トグルのタップ時に呼び出され、[UpdateRowUsecase](../../domain/usecases/update_row_usecase.md)で行の決済方法を更新する。同じ決済方法を再度タップした場合は現金（`null`）に戻す判定は、本メソッドを呼び出す側（[VoucherDataRow](../widgets/voucher_data_row.md)）が現在値と比較して行う。
+
+### input
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | バリデーション | 備考 |
+|---|---|---|---|---|---|
+| 行ID | rowId | - | string | 必須 | - |
+| 決済方法 | paymentMethod | optional | [PaymentMethod](../../domain/entities/enums/payment_method.md) | 任意 | 現金に戻す場合は`null` |
+
+### output
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | 備考 |
+|---|---|---|---|---|
+| - | - | - | void | 結果は[VoucherSheetState](./voucher_sheet_state.md)の更新として反映される |
+
+### exception
+
+なし（例外は捕捉し、[副作用仕様](#副作用side-effect仕様)の`cellInputFailed`と同様に通知する）
+
+### 処理詳細
+1. `sheetDetail.rows`から`rowId`に一致する行を取得し、変数`currentRow`に格納する。
+2. [UpdateRowUsecase.call](../../domain/usecases/update_row_usecase.md)を`current=currentRow`・`paymentMethod=paymentMethod`で呼び出す。\
+   条件a: 例外が送出された場合、`message`に例外メッセージを設定した[VoucherSheetEffect](./voucher_sheet_effect.md)（`kind=cellInputFailed`）を発行し、処理を終了する。\
+   条件b: 成功した場合、次のステップへ進む。
+3. [GetSheetDetailUsecase.call](../../domain/usecases/get_sheet_detail_usecase.md)を`_sheetInstanceId`で呼び出し、変数`detail`に格納する（`dailySummary`の再集計を含む）。
+4. `status=success`・`sheetDetail=detail`とした状態を反映する。
+
+## setStaffShiftName
+
+### 処理概要
+[VoucherStaffBar](../widgets/voucher_staff_bar.md)の氏名プルダウンでの選択確定時に呼び出され、[UpdateStaffShiftUsecase](../../domain/usecases/update_staff_shift_usecase.md)でシフトの氏名を更新する。
+
+### input
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | バリデーション | 備考 |
+|---|---|---|---|---|---|
+| シフトID | shiftId | - | string | 必須 | - |
+| スタッフID | staffId | optional | string | 任意 | 「未定」選択時は`null` |
+
+### output
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | 備考 |
+|---|---|---|---|---|
+| - | - | - | void | 結果は[VoucherSheetState](./voucher_sheet_state.md)の更新として反映される |
+
+### exception
+
+なし（例外は[副作用仕様](#副作用side-effect仕様)の`cellInputFailed`と同様に通知する）
+
+### 処理詳細
+1. `sheetDetail.staffShifts`から`shiftId`に一致するシフトを取得し、変数`currentShift`に格納する。
+2. [UpdateStaffShiftUsecase.call](../../domain/usecases/update_staff_shift_usecase.md)を`current=currentShift`・`staffId=staffId`で呼び出す。
+3. [GetSheetDetailUsecase.call](../../domain/usecases/get_sheet_detail_usecase.md)を`_sheetInstanceId`で呼び出し、変数`detail`に格納する。
+4. `status=success`・`sheetDetail=detail`とした状態を反映する。
+
+## setStaffShiftDrinkBack
+
+### 処理概要
+[VoucherStaffBar](../widgets/voucher_staff_bar.md)のドリンクバック入力欄のフォーカスアウト時に呼び出され、[UpdateStaffShiftUsecase](../../domain/usecases/update_staff_shift_usecase.md)でシフトのドリンクバックを更新する。
+
+### input
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | バリデーション | 備考 |
+|---|---|---|---|---|---|
+| シフトID | shiftId | - | string | 必須 | - |
+| ドリンクバック | drinkBack | - | string | 必須（空文字列許容） | - |
+
+### output
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | 備考 |
+|---|---|---|---|---|
+| - | - | - | void | 結果は[VoucherSheetState](./voucher_sheet_state.md)の更新として反映される |
+
+### exception
+
+なし
+
+### 処理詳細
+1. `sheetDetail.staffShifts`から`shiftId`に一致するシフトを取得し、変数`currentShift`に格納する。
+2. [UpdateStaffShiftUsecase.call](../../domain/usecases/update_staff_shift_usecase.md)を`current=currentShift`・`drinkBack=drinkBack`で呼び出す。
+3. [GetSheetDetailUsecase.call](../../domain/usecases/get_sheet_detail_usecase.md)を`_sheetInstanceId`で呼び出し、変数`detail`に格納する。
+4. `status=success`・`sheetDetail=detail`とした状態を反映する。
+
+## startEditingStaffShiftTime
+
+### 処理概要
+就業時刻ボタンのタップ時に呼び出され、編集中シフトの位置を状態に反映する（DB・usecase呼び出しなし）。
+
+### input
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | バリデーション | 備考 |
+|---|---|---|---|---|---|
+| シフトID | shiftId | - | string | 必須 | - |
+| 項目 | field | - | string | 必須, `'start'`または`'end'` | - |
+
+### output
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | 備考 |
+|---|---|---|---|---|
+| - | - | - | void | - |
+
+### exception
+
+なし
+
+### 処理詳細
+1. `editingStaffShiftId=shiftId`・`editingStaffShiftField=field`とした状態を反映する。
+
+## commitStaffShiftTime
+
+### 処理概要
+就業時刻編集（`<input type="time">`相当）の確定時に呼び出され、[UpdateStaffShiftUsecase](../../domain/usecases/update_staff_shift_usecase.md)でシフトの時刻を更新する。
+
+### input
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | バリデーション | 備考 |
+|---|---|---|---|---|---|
+| 時刻 | value | - | string | 必須, `HH:mm`形式 | - |
+
+### output
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | 備考 |
+|---|---|---|---|---|
+| - | - | - | void | 結果は[VoucherSheetState](./voucher_sheet_state.md)の更新として反映される |
+
+### exception
+
+なし（例外は[副作用仕様](#副作用side-effect仕様)の`cellInputFailed`と同様に通知する）
+
+### 処理詳細
+1. `sheetDetail.staffShifts`から`editingStaffShiftId`に一致するシフトを取得し、変数`currentShift`に格納する。
+2. 条件a: `editingStaffShiftField='start'`の場合、[UpdateStaffShiftUsecase.call](../../domain/usecases/update_staff_shift_usecase.md)を`current=currentShift`・`startTime=value`で呼び出す。\
+   条件b: `editingStaffShiftField='end'`の場合、`endTime=value`で呼び出す。
+3. [GetSheetDetailUsecase.call](../../domain/usecases/get_sheet_detail_usecase.md)を`_sheetInstanceId`で呼び出し、変数`detail`に格納する。
+4. `status=success`・`sheetDetail=detail`・`editingStaffShiftId=null`・`editingStaffShiftField=null`とした状態を反映する。
 
 ## exportCsv
 
@@ -275,12 +461,16 @@ Error状態からの再試行。[load](#load)を再実行する。
 | 成功／success | セルタップ | 成功／success | [startEditingCell](#starteditingcell)で`editingRowId`・`editingColumnId`・`editingText`を設定（状態自体は`success`のまま） |
 | 成功／success（編集中） | テキスト入力変化 | 成功／success | [updateEditingText](#updateeditingtext)で`editingText`を更新 |
 | 成功／success（編集中） | 編集確定（フォーカスアウト／Enter） | 成功／success | [commitCell](#commitcell)を実行し、成功時`sheetDetail`を再設定して`editingRowId`等をクリア。失敗時は編集中のまま`cellInputFailed`副作用を発行 |
+| 成功／success | 「担当」列プルダウン選択／「合計金額」列「P」「カ」トグル | 成功／success | [setRowStaff](#setrowstaff)／[setRowPaymentMethod](#setrowpaymentmethod)を実行し、成功時`sheetDetail`を再設定（`dailySummary`の再集計を含む）。失敗時は`cellInputFailed`副作用を発行 |
+| 成功／success | [VoucherStaffBar](../widgets/voucher_staff_bar.md)の氏名プルダウン選択／ドリンクバック入力確定 | 成功／success | [setStaffShiftName](#setstaffshiftname)／[setStaffShiftDrinkBack](#setstaffshiftdrinkback)を実行し、成功後`sheetDetail`を再設定 |
+| 成功／success | 就業時刻ボタンタップ | 成功／success | [startEditingStaffShiftTime](#starteditingstaffshifttime)で`editingStaffShiftId`・`editingStaffShiftField`を設定（状態自体は`success`のまま） |
+| 成功／success（シフト時刻編集中） | 時刻編集確定 | 成功／success | [commitStaffShiftTime](#commitstaffshifttime)を実行し、成功時`sheetDetail`を再設定して`editingStaffShiftId`等をクリア |
 | 成功／success | CSV出力ボタン押下 | 成功／success | [exportCsv](#exportcsv)を実行し、`isExporting`を`true`→`false`に更新。結果は副作用で通知 |
 
 ## 副作用（Side Effect）仕様
 
 | 契機 | 発行する[VoucherSheetEffect](./voucher_sheet_effect.md) | UI側の処理 |
 |---|---|---|
-| [addRow](#addrow)・[commitCell](#commitcell)の失敗 | `kind=cellInputFailed`, `message`=例外メッセージ | 画面上部に[NoticeBanner](../../../../core/widgets/notice_banner.md)（`tone=error`）でエラーメッセージを表示する |
+| [addRow](#addrow)・[commitCell](#commitcell)・[setRowStaff](#setrowstaff)・[setRowPaymentMethod](#setrowpaymentmethod)の失敗 | `kind=cellInputFailed`, `message`=例外メッセージ | 画面上部に[NoticeBanner](../../../../core/widgets/notice_banner.md)（`tone=error`）でエラーメッセージを表示する |
 | [exportCsv](#exportcsv)の成功 | `kind=exportSucceeded`, `csvContent`=CSV文字列 | OS標準の共有シート（Share）を表示し、CSVファイルとして共有・保存できるようにする。あわせて画面上部に[NoticeBanner](../../../../core/widgets/notice_banner.md)（`tone=success`）で完了メッセージを表示する |
 | [exportCsv](#exportcsv)の失敗 | `kind=exportFailed`, `message`=例外メッセージ | 画面上部に[NoticeBanner](../../../../core/widgets/notice_banner.md)（`tone=error`）でエラーメッセージを表示する |

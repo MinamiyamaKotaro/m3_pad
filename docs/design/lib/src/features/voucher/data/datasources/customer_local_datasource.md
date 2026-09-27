@@ -3,6 +3,7 @@
 | 新規作成・更新日 | 作成・更新者名 | 作成・更新内容 |
 |---|---|---|
 | 2026-09-25 | minamiyama | 新規作成 |
+| 2026-09-27 | minamiyama | `insert`を追加（お名前欄への入力による新規顧客の作成に対応）。`findByIds`を追加（[SheetDetail.customersById](../../domain/entities/sheet_detail.md)の一括取得用） |
 
 ## 処理概要
 
@@ -16,9 +17,68 @@ sequenceDiagram
     participant D as CustomerLocalDataSource
     participant DB as SQLite
 
+    R->>D: insert(model)
+    D->>DB: INSERT INTO m_customer ...
     R->>D: findById(customerId)
     D->>DB: SELECT * FROM m_customer WHERE customer_id = ?
 ```
+
+## insert
+
+### 処理概要
+新しい[CustomerModel](../models/customer_model.md)を1件永続化する。
+
+### input
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | バリデーション | 備考 |
+|---|---|---|---|---|---|
+| 顧客 | model | - | [CustomerModel](../models/customer_model.md) | 必須 | - |
+
+### output
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | 備考 |
+|---|---|---|---|---|
+| - | - | - | void | - |
+
+### exception
+
+なし
+
+### 処理詳細
+1. `model.toMap`で変換した`Map`を値としたINSERT文をDBに対して1回発行する。
+   ```sql
+   INSERT INTO m_customer (customer_id, name, gender, status, created_at, updated_at)
+   VALUES (:customerId, :name, :gender, :status, :createdAt, :updatedAt);
+   ```
+
+## findByIds
+
+### 処理概要
+複数の`customerId`に紐づく有効な[CustomerModel](../models/customer_model.md)を一括取得する。行ごとにループしてDBを呼び出すことを避けるため使用する。`customerIds`が空リストの場合はSQLを発行せず空リストを返す。
+
+### input
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | バリデーション | 備考 |
+|---|---|---|---|---|---|
+| 顧客IDリスト | customerIds | list | string | 必須, 空リスト許容 | - |
+
+### output
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | 備考 |
+|---|---|---|---|---|
+| 顧客一覧 | - | list | [CustomerModel](../models/customer_model.md) | 該当なしの場合は空リスト |
+
+### exception
+
+なし
+
+### 処理詳細
+1. `customerIds`が空リストの場合、空リストを返却し処理を終了する。
+2. `customerIds`を`IN`句のプレースホルダに展開したSQLをDBに対して1回発行する。
+   ```sql
+   SELECT * FROM m_customer WHERE customer_id IN (:customerId1, :customerId2, ...) AND status = 'active';
+   ```
+3. 取得結果を[CustomerModel.fromMap](../models/customer_model.md)でそれぞれ変換し、リストとして返却する。
 
 ## findById
 
