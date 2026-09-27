@@ -7,7 +7,7 @@
 
 ## 画面ID
 
-`ENT_001_VOUCHER`
+`MMM_001_VOUCHER`
 
 ## 処理概要
 

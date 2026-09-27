@@ -7,7 +7,7 @@
 
 ## 処理概要
 
-伝票入力画面（`ENT_001_VOUCHER`）の描画に必要な情報一式を[SheetDetail](../entities/sheet_detail.md)として取得するユースケース。[ExportDailySheetToCsvUsecase](./export_daily_sheet_to_csv_usecase.md)と同様に行×列の参照をO(1)にするための事前変換を行う。[SheetInstanceRepository](../repositories/sheet_instance_repository.md)・[HeaderRepository](../repositories/header_repository.md)・[SheetRowRepository](../repositories/sheet_row_repository.md)・[SheetCellRepository](../repositories/sheet_cell_repository.md)・[StaffShiftRepository](../repositories/staff_shift_repository.md)・[DailyPaymentSummaryRepository](../repositories/daily_payment_summary_repository.md)・[StaffRepository](../repositories/staff_repository.md)・[CustomerRepository](../repositories/customer_repository.md)に依存する。[VoucherSheetNotifier](../../presentation/controllers/voucher_sheet_notifier.md)から呼び出される。
+伝票入力画面（`MMM_001_VOUCHER`）の描画に必要な情報一式を[SheetDetail](../entities/sheet_detail.md)として取得するユースケース。[ExportDailySheetToCsvUsecase](./export_daily_sheet_to_csv_usecase.md)と同様に行×列の参照をO(1)にするための事前変換を行う。[SheetInstanceRepository](../repositories/sheet_instance_repository.md)・[HeaderRepository](../repositories/header_repository.md)・[SheetRowRepository](../repositories/sheet_row_repository.md)・[SheetCellRepository](../repositories/sheet_cell_repository.md)・[StaffShiftRepository](../repositories/staff_shift_repository.md)・[DailyPaymentSummaryRepository](../repositories/daily_payment_summary_repository.md)・[StaffRepository](../repositories/staff_repository.md)・[CustomerRepository](../repositories/customer_repository.md)に依存する。[VoucherSheetNotifier](../../presentation/controllers/voucher_sheet_notifier.md)から呼び出される。
 
 ## 処理シーケンス図
 

@@ -6,7 +6,7 @@
 
 ## 概要
 
-伝票入力画面（[VoucherSheetPage](../pages/voucher_sheet_page.md)、`ENT_001_VOUCHER`）右上の「スタッフ」欄（[StaffShift](../../domain/entities/staff_shift.md)、通常3件）を表示するウィジェット。タイトルヘッダー（AppBar）と表のヘッダー（[VoucherHeaderRow](./voucher_header_row.md)）の間に、`status=success`の間は常時表示する（`Scaffold`の`body`ではなく、AppBarと表本体の間に配置した専用の帯として実装する）。シフトごとに、氏名プルダウン・就業開始/終了時刻ボタン・「D」ラベル・ドリンクバック入力欄を横並びに配置する。就業時刻ボタンは未入力時、現在時刻を初期値として表示する（画面内でのみ使用する）。
+伝票入力画面（[VoucherSheetPage](../pages/voucher_sheet_page.md)、`MMM_001_VOUCHER`）右上の「スタッフ」欄（[StaffShift](../../domain/entities/staff_shift.md)、通常3件）を表示するウィジェット。タイトルヘッダー（AppBar）と表のヘッダー（[VoucherHeaderRow](./voucher_header_row.md)）の間に、`status=success`の間は常時表示する（`Scaffold`の`body`ではなく、AppBarと表本体の間に配置した専用の帯として実装する）。シフトごとに、氏名プルダウン・就業開始/終了時刻ボタン・「D」ラベル・ドリンクバック入力欄を横並びに配置する。就業時刻ボタンは未入力時、現在時刻を初期値として表示する（画面内でのみ使用する）。
 
 ## 依存関係シーケンス図
 

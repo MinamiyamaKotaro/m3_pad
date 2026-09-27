@@ -7,7 +7,7 @@
 
 ## 概要
 
-伝票入力画面（`ENT_001_VOUCHER`）の描画に必要なデータを1つに束ねた読み取り専用の集約DTO。[SheetInstance](./sheet_instance.md)・[Header](./header.md)一覧・[SheetRow](./sheet_row.md)一覧・[SheetCell](./sheet_cell.md)・[StaffShift](./staff_shift.md)一覧・[DailyPaymentSummary](./daily_payment_summary.md)・スタッフ選択肢一覧を、行×列の参照がO(1)になるようネスト済みMapとして保持する。[GetSheetDetailUsecase](../usecases/get_sheet_detail_usecase.md)が生成し、[VoucherSheetNotifier](../../presentation/controllers/voucher_sheet_notifier.md)が[VoucherSheetState](../../presentation/controllers/voucher_sheet_state.md)へ格納する。
+伝票入力画面（`MMM_001_VOUCHER`）の描画に必要なデータを1つに束ねた読み取り専用の集約DTO。[SheetInstance](./sheet_instance.md)・[Header](./header.md)一覧・[SheetRow](./sheet_row.md)一覧・[SheetCell](./sheet_cell.md)・[StaffShift](./staff_shift.md)一覧・[DailyPaymentSummary](./daily_payment_summary.md)・スタッフ選択肢一覧を、行×列の参照がO(1)になるようネスト済みMapとして保持する。[GetSheetDetailUsecase](../usecases/get_sheet_detail_usecase.md)が生成し、[VoucherSheetNotifier](../../presentation/controllers/voucher_sheet_notifier.md)が[VoucherSheetState](../../presentation/controllers/voucher_sheet_state.md)へ格納する。
 
 ## 依存関係シーケンス図
 

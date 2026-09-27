@@ -7,7 +7,7 @@
 
 ## 概要
 
-伝票入力画面（`ENT_001_VOUCHER`）のUI状態（UiState）を表すクラス。[VoucherSheetNotifier](./voucher_sheet_notifier.md)が保持・更新し、[VoucherSheetPage](../pages/voucher_sheet_page.md)が監視（watch）する。ライフサイクル状態は`status`（`VoucherSheetStatus`列挙型、本ファイル内に同居させる）で表現し、単一のクラスが初期・読込中・成功・エラー・空のすべての状態を`status`と各プロパティの組み合わせで表現する。
+伝票入力画面（`MMM_001_VOUCHER`）のUI状態（UiState）を表すクラス。[VoucherSheetNotifier](./voucher_sheet_notifier.md)が保持・更新し、[VoucherSheetPage](../pages/voucher_sheet_page.md)が監視（watch）する。ライフサイクル状態は`status`（`VoucherSheetStatus`列挙型、本ファイル内に同居させる）で表現し、単一のクラスが初期・読込中・成功・エラー・空のすべての状態を`status`と各プロパティの組み合わせで表現する。
 
 `VoucherSheetStatus`の値:
 - `initial`: 画面生成直後、まだ読み込みを開始していない状態

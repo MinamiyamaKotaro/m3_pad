@@ -6,7 +6,7 @@
 
 ## 概要
 
-伝票入力画面（[VoucherSheetPage](../pages/voucher_sheet_page.md)、`ENT_001_VOUCHER`）の列名・単価を固定表示するヘッダー行ウィジェット。紙伝票のヘッダー行固定表示（[requirements.md](../../../../../../../requried/requirements.md) FR-1）に対応する。画面内でのみ使用する。
+伝票入力画面（[VoucherSheetPage](../pages/voucher_sheet_page.md)、`MMM_001_VOUCHER`）の列名・単価を固定表示するヘッダー行ウィジェット。紙伝票のヘッダー行固定表示（[requirements.md](../../../../../../../requried/requirements.md) FR-1）に対応する。画面内でのみ使用する。
 
 ## 依存関係シーケンス図
 

@@ -6,7 +6,7 @@
 
 ## 概要
 
-伝票入力画面（`ENT_001_VOUCHER`）における副作用（Side Effect）を表す型。状態（[VoucherSheetState](./voucher_sheet_state.md)）としては保持せず、[VoucherSheetNotifier](./voucher_sheet_notifier.md)から[VoucherSheetPage](../pages/voucher_sheet_page.md)へ1回限り通知される（`ref.listen`相当で検知する）。バリアントごとに専用クラスを作らず、`kind`で種別を判別する1クラスとして表現する。
+伝票入力画面（`MMM_001_VOUCHER`）における副作用（Side Effect）を表す型。状態（[VoucherSheetState](./voucher_sheet_state.md)）としては保持せず、[VoucherSheetNotifier](./voucher_sheet_notifier.md)から[VoucherSheetPage](../pages/voucher_sheet_page.md)へ1回限り通知される（`ref.listen`相当で検知する）。バリアントごとに専用クラスを作らず、`kind`で種別を判別する1クラスとして表現する。
 
 ## 依存関係シーケンス図
 

@@ -8,7 +8,7 @@ void main() {
 
 /// 伝票デジタル化アプリのルートウィジェット。
 ///
-/// 実際の画面（`ENT_001_VOUCHER`）は `docs/design` の設計に基づき今後実装する。
+/// 実際の画面（`MMM_001_VOUCHER`）は `docs/design` の設計に基づき今後実装する。
 class M3PadApp extends StatelessWidget {
   /// [M3PadApp] を生成する。
   const M3PadApp({super.key});
