@@ -1,5 +1,5 @@
 name: m3_pad
-description: 紙伝票（「寿」フォーマット）をデジタル化する伝票入力アプリ。
+description: 紙伝票をデジタル化する伝票入力アプリ。
 publish_to: 'none'
 
 version: 1.0.0+1

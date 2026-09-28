@@ -1,0 +1,111 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+env:
+  FLUTTER_CHANNEL: stable
+
+jobs:
+  verify:
+    name: Verify
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: ${{ env.FLUTTER_CHANNEL }}
+          cache: true
+      - run: flutter pub get
+      - name: dart format
+        run: dart format --output=none --set-exit-if-changed .
+      - name: flutter analyze
+        run: flutter analyze --fatal-infos
+      - name: flutter test
+        run: flutter test
+
+  build-android:
+    name: Build Android APK
+    needs: verify
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: ${{ env.FLUTTER_CHANNEL }}
+          cache: true
+      - run: flutter pub get
+      - name: Build release APK
+        run: flutter build apk --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: src/build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+
+  build-ios:
+    name: Build iOS IPA (unsigned)
+    needs: verify
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: src
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: ${{ env.FLUTTER_CHANNEL }}
+          cache: true
+      - run: flutter pub get
+      - name: Build unsigned iOS app
+        run: flutter build ios --release --no-codesign
+      - name: Package unsigned IPA
+        run: |
+          mkdir -p build/ios/ipa-payload/Payload
+          cp -r build/ios/iphoneos/Runner.app build/ios/ipa-payload/Payload/
+          (cd build/ios/ipa-payload && zip -r ../m3_pad-unsigned.ipa Payload)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ios-ipa
+          path: src/build/ios/m3_pad-unsigned.ipa
+          if-no-files-found: error
+
+  release:
+    name: Create GitHub Release
+    needs:
+      - build-android
+      - build-ios
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: android-apk
+          path: dist
+      - uses: actions/download-artifact@v4
+        with:
+          name: ios-ipa
+          path: dist
+      - name: Rename artifacts with version
+        run: |
+          mv dist/app-release.apk "dist/m3_pad-${{ github.ref_name }}-android.apk"
+          mv dist/m3_pad-unsigned.ipa "dist/m3_pad-${{ github.ref_name }}-ios-unsigned.ipa"
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            --title "${{ github.ref_name }}" \
+            --generate-notes \
+            --notes "iOS(iPad)向け \`.ipa\` は未署名です。Sideloadlyなどのサイドローディングツール、またはXcodeの「Devices and Simulators」機能を用い、自身の無料Apple IDで署名してインストールしてください（無料Apple IDの制約上、7日ごとの再署名が必要です）。Android向け \`.apk\` はそのままインストールできます（「提供元不明のアプリ」の許可が必要です）。" \
+            dist/*
