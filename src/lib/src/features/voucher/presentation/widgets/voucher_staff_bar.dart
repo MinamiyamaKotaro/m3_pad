@@ -95,13 +95,16 @@ class VoucherStaffBar extends StatelessWidget {
                 child:
                     Text('スタッフ', style: TextStyle(fontWeight: FontWeight.bold)),
               ),
-              ...shifts.map(_buildEntry),
+              ...shifts.map(
+                (final StaffShift shift) => _buildEntry(context, shift),
+              ),
             ],
           ),
         ),
       );
 
-  Widget _buildEntry(final StaffShift shift) => Padding(
+  Widget _buildEntry(final BuildContext context, final StaffShift shift) =>
+      Padding(
         padding: const EdgeInsets.only(right: 12),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -124,9 +127,9 @@ class VoucherStaffBar extends StatelessWidget {
                     onNameChanged(shift.shiftId, value),
               ),
             ),
-            _timeButton(shift, 'start', shift.startTime),
+            _timeButton(context, shift, 'start', shift.startTime),
             const Text('～'),
-            _timeButton(shift, 'end', shift.endTime),
+            _timeButton(context, shift, 'end', shift.endTime),
             const SizedBox(width: 4),
             const Text('D', style: TextStyle(fontWeight: FontWeight.bold)),
             SizedBox(
@@ -143,15 +146,14 @@ class VoucherStaffBar extends StatelessWidget {
       );
 
   Widget _timeButton(
+    final BuildContext context,
     final StaffShift shift,
     final String field,
     final String? value,
   ) {
     final bool isEditing =
         editingStaffShiftId == shift.shiftId && editingStaffShiftField == field;
-    final String now = TimeOfDay.now().format(
-      WidgetsBinding.instance.rootElement!,
-    );
+    final String now = TimeOfDay.now().format(context);
     if (isEditing) {
       return SizedBox(
         width: 72,

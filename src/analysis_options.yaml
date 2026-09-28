@@ -2,6 +2,7 @@ analyzer:
   exclude:
     - build/**
     - ios/**
+    - android/**
 linter:
   rules:
     - always_declare_return_types
