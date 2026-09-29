@@ -4,6 +4,7 @@
 |---|---|---|
 | 2026-09-29 | minamiyama | 新規作成。[docs/ui/wireframe](../../../../../../../ui/wireframe/app.js)（`table.sheet`の`position: sticky`によるヘッダー行/本日の合計行/お名前列/合計金額列/担当列の固定表示）を正として、旧`VoucherSheetPage`内のスクロール実装（縦横とも単純な`SingleChildScrollView`のネストのみで固定表示なし）を置き換え。旧`VoucherDataRow`を廃止し、[VoucherNameCell](./voucher_name_cell.md)・[VoucherTotalCell](./voucher_total_cell.md)・[VoucherStaffSelectCell](./voucher_staff_select_cell.md)に分割 |
 | 2026-09-29 | minamiyama | 「合計金額」列の金額・決済方法別内訳（[VoucherDailySummaryRow](./voucher_daily_summary_row.md)）が折り返して下に回り込んでいたのを修正するため、列幅を96pxから140pxへ拡張。あわせて本日の合計行における「合計金額」列セルの右罫線を削除 |
+| 2026-09-29 | minamiyama | MEMO列の入力量に応じて行の高さが本来の必要高さ（[_rowHeight]、「合計金額」列の高さと同一）より大きくなる場合に、その行全体（お名前・各価格列・MEMO・合計金額・担当）の高さを統一する`_computeRowHeights`を追加。あわせて、価格列（スピンボタン）・「合計金額」・「担当」セルが行の高さ拡大に追従せず上詰めになっていた不具合を修正（`_verticalCenter`により、幅は保ったまま縦方向のみ中央揃えするよう変更） |
 
 ## 概要
 
@@ -61,6 +62,15 @@ Flutterには表組みの一部の行・列のみを固定表示するCSSの`pos
 - 横方向: ヘッダー行・データ行本体・本日の合計行（いずれも価格列＋MEMO列の部分のみ）の3つの`ScrollController`を同期し、いずれか1つをドラッグしても3領域が同じ量だけ横スクロールする。「お名前」列・「合計金額」列・「担当」列は左右の固定領域に属するため、この横スクロールの影響を受けない。
 
 同期処理は非公開クラス`_LinkedScrollControllers`が担う。相互参照による無限ループを避けるため、同期処理中であることを示すフラグ（`_isSyncing`）を用いて、あるコントローラーの変更が他のコントローラーへ伝播している間は再帰的な同期処理を行わない。
+
+## 行の高さ
+
+データ行の高さは、3領域（お名前列・価格列＋MEMO列・合計金額列＋担当列）で常に統一する必要があるため、`_computeRowHeights`が行ごとの高さを一括算出し、3領域それぞれの行描画（`for (int i = 0; i < widget.rows.length; i++) ...`）へ共通で渡す。
+
+- ミニマムは「合計金額」列の高さ（`_rowHeight`）とする。
+- MEMO列（`isPriced=false`の列）に入力がある場合、`TextPainter`でその内容を列幅（`_priceColWidth`）に合わせて折り返した際の必要高さを算出し、`_rowHeight`を上回る場合はその値を採用する。
+- 算出した高さは、お名前セル・価格セル（スピンボタン）・MEMOセル・合計金額セル・担当セルのすべてに同一の値を適用する。
+- 価格セル（スピンボタン）・合計金額セル・担当セルは、行の高さがミニマムより大きくなった場合でも内容物のサイズを保ったまま縦方向中央に表示する必要があるため、`_verticalCenter`（`Column`の`mainAxisAlignment.center`＋`crossAxisAlignment.stretch`）でラップする。横幅は`crossAxisAlignment.stretch`により維持されるため、「担当」プルダウンの`isExpanded`や「合計金額」の右揃えレイアウトは崩れない（`Container`の`alignment`プロパティで中央揃えすると横方向も内容物の自然幅に縮んでしまうため使用しない）。
 
 ## 「行を追加」ボタンの配置
 

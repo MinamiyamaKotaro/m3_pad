@@ -81,6 +81,7 @@ class VoucherCellField extends StatelessWidget {
     }
 
     final String displayValue = cell?.content ?? '';
+    final TextStyle? baseStyle = Theme.of(context).textTheme.bodyMedium;
     return InkWell(
       onTap: onTap,
       child: Container(
@@ -89,8 +90,8 @@ class VoucherCellField extends StatelessWidget {
         child: Text(
           displayValue.isEmpty ? '–' : displayValue,
           style: displayValue.isEmpty
-              ? TextStyle(color: Theme.of(context).disabledColor)
-              : null,
+              ? baseStyle?.copyWith(color: Theme.of(context).disabledColor)
+              : baseStyle,
         ),
       ),
     );

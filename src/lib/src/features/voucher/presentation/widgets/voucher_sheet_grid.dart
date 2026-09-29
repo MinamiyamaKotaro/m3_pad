@@ -174,6 +174,10 @@ class _VoucherSheetGridState extends State<VoucherSheetGrid> {
   static const double _rowHeight = 56;
   static const double _footerHeight = 92;
 
+  /// MEMOセルのテキストの左右パディング合計（横方向の折り返し幅計算用）と
+  /// 上下パディング合計（縦方向の必要高さ計算用）に共通して用いる値。
+  static const double _cellTextPadding = 16;
+
   final _LinkedScrollControllers _vertical = _LinkedScrollControllers(3);
   final _LinkedScrollControllers _horizontal = _LinkedScrollControllers(3);
 
@@ -187,20 +191,60 @@ class _VoucherSheetGridState extends State<VoucherSheetGrid> {
   @override
   Widget build(final BuildContext context) {
     final double middleWidth = _priceColWidth * widget.headers.length;
+    final List<double> rowHeights = _computeRowHeights(context);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        SizedBox(width: _nameColWidth, child: _buildNameColumn(context)),
-        Expanded(child: _buildPriceColumns(context, middleWidth)),
+        SizedBox(
+          width: _nameColWidth,
+          child: _buildNameColumn(context, rowHeights),
+        ),
+        Expanded(child: _buildPriceColumns(context, middleWidth, rowHeights)),
         SizedBox(
           width: _totalColWidth + _staffColWidth,
-          child: _buildTrailingColumns(context),
+          child: _buildTrailingColumns(context, rowHeights),
         ),
       ],
     );
   }
 
-  Widget _buildNameColumn(final BuildContext context) => Column(
+  /// 行ごとの高さ一覧を算出する。ミニマムは「合計金額」列の高さ
+  /// （[_rowHeight]）とし、MEMO列（`isPriced=false`の列）の入力量に応じて
+  /// 折り返し行数が増える場合は、その分だけ高さを広げる。
+  List<double> _computeRowHeights(final BuildContext context) {
+    final TextStyle style =
+        Theme.of(context).textTheme.bodyMedium ?? const TextStyle();
+    return widget.rows.map((final SheetRow row) {
+      final Map<String, SheetCell> cells =
+          widget.cellsByRowIdAndColumnId[row.rowId] ??
+              const <String, SheetCell>{};
+      double height = _rowHeight;
+      for (final Header header in widget.headers) {
+        if (header.isPriced) {
+          continue;
+        }
+        final String content = cells[header.columnId]?.content ?? '';
+        if (content.isEmpty) {
+          continue;
+        }
+        final TextPainter painter = TextPainter(
+          text: TextSpan(text: content, style: style),
+          textDirection: TextDirection.ltr,
+        )..layout(maxWidth: _priceColWidth - _cellTextPadding);
+        final double needed = painter.height + _cellTextPadding;
+        if (needed > height) {
+          height = needed;
+        }
+      }
+      return height;
+    }).toList();
+  }
+
+  Widget _buildNameColumn(
+    final BuildContext context,
+    final List<double> rowHeights,
+  ) =>
+      Column(
         children: <Widget>[
           _fixedCell(
             context,
@@ -216,11 +260,11 @@ class _VoucherSheetGridState extends State<VoucherSheetGrid> {
               controller: _vertical.controllers[0],
               child: Column(
                 children: <Widget>[
-                  for (final SheetRow row in widget.rows)
+                  for (int i = 0; i < widget.rows.length; i++)
                     Container(
-                      height: _rowHeight,
+                      height: rowHeights[i],
                       decoration: BoxDecoration(border: _cellBorder(context)),
-                      child: _nameCellFor(row),
+                      child: _nameCellFor(widget.rows[i]),
                     ),
                   Container(
                     height: _rowHeight,
@@ -255,6 +299,7 @@ class _VoucherSheetGridState extends State<VoucherSheetGrid> {
   Widget _buildPriceColumns(
     final BuildContext context,
     final double middleWidth,
+    final List<double> rowHeights,
   ) =>
       Column(
         children: <Widget>[
@@ -277,11 +322,14 @@ class _VoucherSheetGridState extends State<VoucherSheetGrid> {
                 scrollDirection: Axis.horizontal,
                 child: Column(
                   children: <Widget>[
-                    for (final SheetRow row in widget.rows)
+                    for (int i = 0; i < widget.rows.length; i++)
                       SizedBox(
-                        height: _rowHeight,
+                        height: rowHeights[i],
                         width: middleWidth,
-                        child: Row(children: _priceCellsFor(row)),
+                        child: Row(
+                          children:
+                              _priceCellsFor(widget.rows[i], rowHeights[i]),
+                        ),
                       ),
                     Container(
                       height: _rowHeight,
@@ -312,7 +360,11 @@ class _VoucherSheetGridState extends State<VoucherSheetGrid> {
         ],
       );
 
-  Widget _buildTrailingColumns(final BuildContext context) => Column(
+  Widget _buildTrailingColumns(
+    final BuildContext context,
+    final List<double> rowHeights,
+  ) =>
+      Column(
         children: <Widget>[
           Row(
             children: <Widget>[
@@ -341,10 +393,14 @@ class _VoucherSheetGridState extends State<VoucherSheetGrid> {
               controller: _vertical.controllers[2],
               child: Column(
                 children: <Widget>[
-                  for (final SheetRow row in widget.rows)
+                  for (int i = 0; i < widget.rows.length; i++)
                     SizedBox(
-                      height: _rowHeight,
-                      child: _trailingCellsFor(context, row),
+                      height: rowHeights[i],
+                      child: _trailingCellsFor(
+                        context,
+                        widget.rows[i],
+                        rowHeights[i],
+                      ),
                     ),
                   Container(
                     height: _rowHeight,
@@ -430,6 +486,18 @@ class _VoucherSheetGridState extends State<VoucherSheetGrid> {
     );
   }
 
+  /// [child] を、幅は親いっぱいに保ったまま（横方向は`Column`の
+  /// `crossAxisAlignment.stretch`により子ウィジェット自身の配置ロジックに
+  /// 委ねる）、縦方向のみ中央揃えするラッパー。MEMOの折り返しなどで行の
+  /// 高さが本来の必要高さより大きくなった場合に、スピンボタン・「担当」
+  /// プルダウン・「合計金額」の内容が行の高さに追従して中央に表示される
+  /// ようにするために使用する。
+  Widget _verticalCenter(final Widget child) => Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[child],
+      );
+
   Widget _nameCellFor(final SheetRow row) {
     final bool isEditingName = widget.editingRowId == row.rowId &&
         widget.editingColumnId == 'customerName';
@@ -446,7 +514,7 @@ class _VoucherSheetGridState extends State<VoucherSheetGrid> {
     );
   }
 
-  List<Widget> _priceCellsFor(final SheetRow row) {
+  List<Widget> _priceCellsFor(final SheetRow row, final double rowHeight) {
     final Map<String, SheetCell> cells =
         widget.cellsByRowIdAndColumnId[row.rowId] ??
             const <String, SheetCell>{};
@@ -457,47 +525,60 @@ class _VoucherSheetGridState extends State<VoucherSheetGrid> {
           isEditingRow && widget.editingColumnId == header.columnId;
       return Container(
         width: _priceColWidth,
+        height: rowHeight,
         decoration: BoxDecoration(border: _cellBorder(context)),
-        child: VoucherCellField(
-          header: header,
-          cell: cell,
-          isEditing: isEditingCell,
-          editingText: isEditingCell ? widget.editingText : null,
-          onTap: () => widget.onCellTap(
-            row.rowId,
-            header.columnId,
-            header.isPriced
-                ? (cell?.quantity?.toString() ?? '')
-                : (cell?.content ?? ''),
+        child: _verticalCenter(
+          VoucherCellField(
+            header: header,
+            cell: cell,
+            isEditing: isEditingCell,
+            editingText: isEditingCell ? widget.editingText : null,
+            onTap: () => widget.onCellTap(
+              row.rowId,
+              header.columnId,
+              header.isPriced
+                  ? (cell?.quantity?.toString() ?? '')
+                  : (cell?.content ?? ''),
+            ),
+            onChanged: widget.onTextChanged,
+            onSubmitted: widget.onCommit,
           ),
-          onChanged: widget.onTextChanged,
-          onSubmitted: widget.onCommit,
         ),
       );
     }).toList();
   }
 
-  Widget _trailingCellsFor(final BuildContext context, final SheetRow row) =>
+  Widget _trailingCellsFor(
+    final BuildContext context,
+    final SheetRow row,
+    final double rowHeight,
+  ) =>
       Row(
         children: <Widget>[
           Container(
             width: _totalColWidth,
+            height: rowHeight,
             decoration: BoxDecoration(border: _cellBorder(context)),
-            child: VoucherTotalCell(
-              amount: row.totalAmount,
-              paymentMethod: row.paymentMethod,
-              onPaymentMethodChanged: (final PaymentMethod? method) =>
-                  widget.onPaymentMethodChanged(row.rowId, method),
+            child: _verticalCenter(
+              VoucherTotalCell(
+                amount: row.totalAmount,
+                paymentMethod: row.paymentMethod,
+                onPaymentMethodChanged: (final PaymentMethod? method) =>
+                    widget.onPaymentMethodChanged(row.rowId, method),
+              ),
             ),
           ),
           Container(
             width: _staffColWidth,
+            height: rowHeight,
             decoration: BoxDecoration(border: _cellBorder(context)),
-            child: VoucherStaffSelectCell(
-              staffId: row.staffId,
-              staffRoster: widget.staffRoster,
-              onChanged: (final String? staffId) =>
-                  widget.onStaffChanged(row.rowId, staffId),
+            child: _verticalCenter(
+              VoucherStaffSelectCell(
+                staffId: row.staffId,
+                staffRoster: widget.staffRoster,
+                onChanged: (final String? staffId) =>
+                    widget.onStaffChanged(row.rowId, staffId),
+              ),
             ),
           ),
         ],

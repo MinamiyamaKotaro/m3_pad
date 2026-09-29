@@ -5,6 +5,7 @@
 | 2026-09-25 | minamiyama | 新規作成 |
 | 2026-09-29 | minamiyama | [VoucherSheetGrid](./voucher_sheet_grid.md)導入に伴い、使用元を旧`VoucherDataRow`から[VoucherSheetGrid](./voucher_sheet_grid.md)に変更 |
 | 2026-09-29 | minamiyama | `isPriced=true`（MEMO以外）の列について、テキスト入力（数値キーボード）から数量の増減ボタン（スピンボタン）方式に変更。MEMO列（`isPriced=false`）は従来どおりタップして編集するテキスト入力のまま |
+| 2026-09-29 | minamiyama | MEMO列の非編集時テキストのスタイルを、[VoucherSheetGrid](./voucher_sheet_grid.md)の行高さ算出（`TextPainter`によるMEMO内容の折り返し計測）と一致させるため、`Theme.textTheme.bodyMedium`を明示指定するよう変更（従来は`style: null`でアンビエントな既定スタイルに依存していた） |
 
 ## 概要
 
