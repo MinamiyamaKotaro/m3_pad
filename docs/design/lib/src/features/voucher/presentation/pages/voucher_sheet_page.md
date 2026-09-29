@@ -4,6 +4,7 @@
 |---|---|---|
 | 2026-09-25 | minamiyama | 新規作成 |
 | 2026-09-27 | minamiyama | [VoucherStaffBar](../widgets/voucher_staff_bar.md)（タイトルヘッダーと表のヘッダーの間）、[VoucherDailySummaryRow](../widgets/voucher_daily_summary_row.md)（伝票末尾の行）、[VoucherAddRowButton](../widgets/voucher_add_row_button.md)（表内・本日の合計行の一つ前の行）を追加し、行追加ボタンをFloatingActionButtonから表内へ変更（[agents.md](../../../../../../../requried/agents.md)を反映） |
+| 2026-09-29 | minamiyama | [docs/ui/wireframe](../../../../../../../ui/wireframe/app.js)を正として、表本体の描画を[VoucherSheetGrid](../widgets/voucher_sheet_grid.md)（縦横スクロール時の固定表示に対応）へ置き換え。AppBarに「寿」マーク（[VoucherStaffBar](../widgets/voucher_staff_bar.md)と同じ配色）・「MMM_001_VOUCHER」サブタイトル・営業日（月/日）表示を追加 |
 
 ## 画面ID
 
@@ -20,7 +21,7 @@
 | initial / loading | [LoadingIndicator](../../../../core/widgets/loading_indicator.md)を画面中央に表示する |
 | error | `errorMessage`と「再試行」ボタンを画面中央に表示する。ボタン押下で[VoucherSheetNotifier.retry](../controllers/voucher_sheet_notifier.md#retry)を呼び出す |
 | empty | 「まだ行がありません」等の案内文言と「行を追加」ボタンを画面中央に表示する |
-| success | AppBarの直下に[VoucherStaffBar](../widgets/voucher_staff_bar.md)を配置し、その下に[VoucherHeaderRow](../widgets/voucher_header_row.md)を画面上部に固定表示する。続けて[VoucherDataRow](../widgets/voucher_data_row.md)を`sheetDetail.rows`の件数分、[VoucherAddRowButton](../widgets/voucher_add_row_button.md)、[VoucherDailySummaryRow](../widgets/voucher_daily_summary_row.md)の順に、縦・横スクロール可能なグリッドとして表示する |
+| success | AppBarの直下に[VoucherStaffBar](../widgets/voucher_staff_bar.md)を配置し、その下に[VoucherSheetGrid](../widgets/voucher_sheet_grid.md)を表示する。[VoucherSheetGrid](../widgets/voucher_sheet_grid.md)はヘッダー行・データ行（`sheetDetail.rows`の件数分）・行を追加ボタン・本日の合計行を、ヘッダー行/本日の合計行/お名前列/合計金額列/担当列を固定表示した縦・横スクロール可能なグリッドとして表示する |
 
 ## 副作用（Side Effect）の処理
 
@@ -37,22 +38,28 @@
 | ウィジェット | 役割 |
 |---|---|
 | [VoucherStaffBar](../widgets/voucher_staff_bar.md) | 右上「スタッフ」欄（氏名・就業時刻・ドリンクバック）。タイトルヘッダーと表のヘッダーの間に固定表示する |
-| [VoucherHeaderRow](../widgets/voucher_header_row.md) | 列名・単価をヘッダーとして固定表示する行 |
-| [VoucherDataRow](../widgets/voucher_data_row.md) | 1組の来店・卓（[SheetRow](../../domain/entities/sheet_row.md)）を表す1行。お名前（-様＋NEWマーク）・担当スタッフ（プルダウン）・合計金額（決済方法トグル付き）の表示を含む |
-| [VoucherCellField](../widgets/voucher_cell_field.md) | [VoucherDataRow](../widgets/voucher_data_row.md)内の1セル分の入力欄。列の`isPriced`に応じて数量入力／テキスト入力を切り替える |
-| [VoucherAddRowButton](../widgets/voucher_add_row_button.md) | 「行を追加」ボタンを表す行。[VoucherDataRow](../widgets/voucher_data_row.md)一覧の最後、[VoucherDailySummaryRow](../widgets/voucher_daily_summary_row.md)の一つ前の行として表示する |
-| [VoucherDailySummaryRow](../widgets/voucher_daily_summary_row.md) | 伝票末尾の行。その日の合計金額と決済方法別内訳を画面下部に固定表示する |
+| [VoucherSheetGrid](../widgets/voucher_sheet_grid.md) | 表本体。ヘッダー行・データ行・行を追加ボタン・本日の合計行を、固定表示を含む縦横スクロール可能なグリッドとして表示する |
+| [VoucherHeaderRow](../widgets/voucher_header_row.md) | [VoucherSheetGrid](../widgets/voucher_sheet_grid.md)内で使用する、列名・単価のヘッダー行（価格列＋MEMO列部分） |
+| [VoucherNameCell](../widgets/voucher_name_cell.md) | [VoucherSheetGrid](../widgets/voucher_sheet_grid.md)内の1行分の「お名前」列セル（-様＋NEWマーク表示を含む） |
+| [VoucherCellField](../widgets/voucher_cell_field.md) | [VoucherSheetGrid](../widgets/voucher_sheet_grid.md)内の1セル分の入力欄。列の`isPriced`に応じて数量入力／テキスト入力を切り替える |
+| [VoucherTotalCell](../widgets/voucher_total_cell.md) | [VoucherSheetGrid](../widgets/voucher_sheet_grid.md)内の1行分の「合計金額」列セル（決済方法トグル付き） |
+| [VoucherStaffSelectCell](../widgets/voucher_staff_select_cell.md) | [VoucherSheetGrid](../widgets/voucher_sheet_grid.md)内の1行分の「担当」列セル（プルダウン） |
+| [VoucherAddRowButton](../widgets/voucher_add_row_button.md) | 「行を追加」ボタン。[VoucherSheetGrid](../widgets/voucher_sheet_grid.md)の「お名前」列固定領域内、データ行一覧の最後に配置する |
+| [VoucherDailySummaryRow](../widgets/voucher_daily_summary_row.md) | 本日の合計行のうち「合計金額」列セル。その日の合計金額と決済方法別内訳を表示する |
 
 ## 共通UIコンポーネントの利用
 
 - [LoadingIndicator](../../../../core/widgets/loading_indicator.md)（`src/core/widgets/`）: loading状態の表示に使用する。
 - [NoticeBanner](../../../../core/widgets/notice_banner.md)（`src/core/widgets/`）: 副作用（Side Effect）発生時に画面上部のお知らせ表示に使用する。
 
-## AppBarのアクション
+## AppBarの構成
 
-- CSV出力ボタン: 押下で[VoucherSheetNotifier.exportCsv](../controllers/voucher_sheet_notifier.md#exportcsv)を呼び出す。`isExporting=true`の間はボタンをインジケータ表示に切り替え、多重押下を防止する。
+- 先頭（leading）: 紙伝票フォーマット名の丸バッジ（`CircleAvatar`、背景・文字色は`colorScheme.onPrimary`/`colorScheme.primary`でAppBarの配色と反転させる）。
+- タイトル: 「伝票入力」＋画面ID「MMM_001_VOUCHER」の2段表示。
+- アクション: 営業日（`businessDate`の月/日、表示のみ・編集不可）、CSV出力ボタン。CSV出力ボタン押下で[VoucherSheetNotifier.exportCsv](../controllers/voucher_sheet_notifier.md#exportcsv)を呼び出す。`isExporting=true`の間はボタンをインジケータ表示に切り替え、多重押下を防止する。
+- 配色: `AppBarTheme`（`backgroundColor`/`foregroundColor`）により、[docs/ui/wireframe](../../../../../../../ui/wireframe/style.css)の`--color-primary`/`--color-primary-contrast`と同じ配色（黒背景・オフホワイト文字）とする。
 
 ## 行追加ボタンの配置
 
-- success状態: [VoucherAddRowButton](../widgets/voucher_add_row_button.md)を表内（[VoucherDailySummaryRow](../widgets/voucher_daily_summary_row.md)の一つ前の行）に配置する。押下で[VoucherSheetNotifier.addRow](../controllers/voucher_sheet_notifier.md#addrow)を呼び出す。画面右下のFloatingActionButtonは使用しない（横スクロール時にボタンを見失わないよう、行内でお名前列の右隣に水平方向のみ固定表示する。[VoucherAddRowButton](../widgets/voucher_add_row_button.md)参照）。
+- success状態: [VoucherAddRowButton](../widgets/voucher_add_row_button.md)を[VoucherSheetGrid](../widgets/voucher_sheet_grid.md)の「お名前」列固定領域内、データ行一覧の最後（本日の合計行の一つ前）に配置する。押下で[VoucherSheetNotifier.addRow](../controllers/voucher_sheet_notifier.md#addrow)を呼び出す。画面右下のFloatingActionButtonは使用しない（横スクロール時にボタンを見失わないよう、「お名前」列と同じ固定領域に置くことで水平方向は常に視認できるようにする）。
 - empty状態: 画面中央の案内文言に添えたボタン（[状態に応じた表示切り替え](#状態に応じた表示切り替え)参照）を使用する。押下で同じく[VoucherSheetNotifier.addRow](../controllers/voucher_sheet_notifier.md#addrow)を呼び出す。

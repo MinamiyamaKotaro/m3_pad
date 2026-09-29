@@ -35,40 +35,46 @@ class VoucherHeaderRow extends StatelessWidget {
   }
 
   @override
-  Widget build(final BuildContext context) => DecoratedBox(
-        decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface),
-        child: Row(
-          children: headers
-              .map(
-                (final Header header) => Container(
-                  width: 96,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 8,
-                  ),
-                  decoration: const BoxDecoration(
-                    border: Border(right: BorderSide()),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      Text(
-                        header.name,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.labelMedium,
-                      ),
-                      if (header.isPriced &&
-                          unitPricesByColumnId.containsKey(header.columnId))
-                        Text(
-                          '¥${unitPricesByColumnId[header.columnId]}',
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.labelSmall,
-                        ),
-                    ],
+  Widget build(final BuildContext context) {
+    final Color outline = Theme.of(context).colorScheme.outline;
+    return DecoratedBox(
+      decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface),
+      child: Row(
+        children: headers
+            .map(
+              (final Header header) => Container(
+                width: 96,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 6,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  border: Border(
+                    right: BorderSide(color: outline),
+                    bottom: BorderSide(color: outline),
                   ),
                 ),
-              )
-              .toList(),
-        ),
-      );
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Text(
+                      header.name,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.labelMedium,
+                    ),
+                    if (header.isPriced &&
+                        unitPricesByColumnId.containsKey(header.columnId))
+                      Text(
+                        '¥${unitPricesByColumnId[header.columnId]}',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.labelSmall,
+                      ),
+                  ],
+                ),
+              ),
+            )
+            .toList(),
+      ),
+    );
+  }
 }

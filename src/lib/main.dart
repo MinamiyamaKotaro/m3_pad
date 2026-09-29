@@ -35,7 +35,23 @@ class M3PadApp extends ConsumerWidget {
   Widget build(final BuildContext context, final WidgetRef ref) => MaterialApp(
         title: '伝票デジタル化アプリ',
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+          // docs/ui/wireframeの配色（style.cssの--color-*）に合わせる。
+          colorScheme: const ColorScheme.light(
+            primary: Color(0xFF050505),
+            onPrimary: Color(0xFFFFF7EF),
+            onSurface: Color(0xFF2B2621),
+            surfaceContainerHighest: Color(0xFFFAF8F3),
+            onSurfaceVariant: Color(0xFF746B5C),
+            outline: Color(0xFFD8D2C4),
+            outlineVariant: Color(0xFFB9B09A),
+            error: Color(0xFF8A2A1F),
+            errorContainer: Color(0xFFFBE8E6),
+          ),
+          scaffoldBackgroundColor: const Color(0xFFF4F1EA),
+          appBarTheme: const AppBarTheme(
+            backgroundColor: Color(0xFF050505),
+            foregroundColor: Color(0xFFFFF7EF),
+          ),
           useMaterial3: true,
         ),
         home: Consumer(
