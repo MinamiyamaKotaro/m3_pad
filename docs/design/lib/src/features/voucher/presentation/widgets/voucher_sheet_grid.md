@@ -6,6 +6,8 @@
 | 2026-09-29 | minamiyama | 「合計金額」列の金額・決済方法別内訳（[VoucherDailySummaryRow](./voucher_daily_summary_row.md)）が折り返して下に回り込んでいたのを修正するため、列幅を96pxから140pxへ拡張。あわせて本日の合計行における「合計金額」列セルの右罫線を削除 |
 | 2026-09-29 | minamiyama | MEMO列の入力量に応じて行の高さが本来の必要高さ（[_rowHeight]、「合計金額」列の高さと同一）より大きくなる場合に、その行全体（お名前・各価格列・MEMO・合計金額・担当）の高さを統一する`_computeRowHeights`を追加。あわせて、価格列（スピンボタン）・「合計金額」・「担当」セルが行の高さ拡大に追従せず上詰めになっていた不具合を修正（`_verticalCenter`により、幅は保ったまま縦方向のみ中央揃えするよう変更） |
 | 2026-09-29 | minamiyama | ヘッダー管理機能（FR-6）の表示/非表示（`Header.isVisible`）に対応するため、`_visibleHeaders`（`widget.headers`から`isVisible=true`のみを抽出したリスト）を追加。[VoucherHeaderRow](./voucher_header_row.md)への列一覧の受け渡し、価格列＋MEMO列領域の描画幅（`middleWidth`）・各行のセル一覧（`_priceCellsFor`）を`_visibleHeaders`基準に変更し、非表示列は列として描画しないようにした。行の高さ算出（`_computeRowHeights`）・合計金額計算・CSV出力は引き続き全列（非表示含む）を対象とするロジック側で行うため、非表示列のセルデータ・金額計算には影響しない |
+| 2026-09-29 | minamiyama | 現在の単価が同額の列が元々隣接していない場合にグルーピング表示（[VoucherHeaderRow](./voucher_header_row.md)）が成立していなかった不具合を修正するため、`_visibleHeaders`に同額の価格対象列を隣接させる並べ替え（`_groupByPrice`、価格ごとの初出順を保つ安定グルーピング）を追加。あわせて、非価格対象の列（MEMO）を常に価格対象の列より後ろに描画するようにし、ヘッダー管理画面での列追加によりMEMOより後ろに新しい列が描画されないようにした |
+| 2026-09-29 | minamiyama | 「お名前」「合計金額」「担当」のヘッダー見出しを太字（`FontWeight.bold`）表示に変更（[VoucherHeaderRow](./voucher_header_row.md)側の列名太字化と合わせ、全ヘッダー見出しを太字に統一） |
 
 ## 概要
 
@@ -73,9 +75,15 @@ Flutterには表組みの一部の行・列のみを固定表示するCSSの`pos
 - 算出した高さは、お名前セル・価格セル（スピンボタン）・MEMOセル・合計金額セル・担当セルのすべてに同一の値を適用する。
 - 価格セル（スピンボタン）・合計金額セル・担当セルは、行の高さがミニマムより大きくなった場合でも内容物のサイズを保ったまま縦方向中央に表示する必要があるため、`_verticalCenter`（`Column`の`mainAxisAlignment.center`＋`crossAxisAlignment.stretch`）でラップする。横幅は`crossAxisAlignment.stretch`により維持されるため、「担当」プルダウンの`isExpanded`や「合計金額」の右揃えレイアウトは崩れない（`Container`の`alignment`プロパティで中央揃えすると横方向も内容物の自然幅に縮んでしまうため使用しない）。
 
-## 表示対象の列（非表示列の除外）
+## 表示対象の列と描画順（非表示列の除外・同額グルーピング・MEMO末尾固定）
 
-`widget.headers`のうち`isVisible=true`の列のみを`_visibleHeaders`として抽出し、[VoucherHeaderRow](./voucher_header_row.md)への列一覧・価格列＋MEMO列領域の描画幅（`middleWidth`）・各行のセル一覧（`_priceCellsFor`）に用いる。`isVisible=false`の列は伝票グリッド上に列として表示しないが、既存セルの数量・単価データは保持されたままであり、合計金額（`SheetRow.totalAmount`、DBトリガーで自動更新）やCSV出力（[ExportDailySheetToCsvUsecase](../../domain/usecases/export_daily_sheet_to_csv_usecase.md)）は全列（非表示含む）を対象に計算するため、表示のON/OFFのみで金額に影響を与えない。
+`_visibleHeaders`は、以下の手順で表示・描画順の列一覧を組み立てる。
+
+1. `widget.headers`のうち`isVisible=true`の列のみを対象とする。`isVisible=false`の列は伝票グリッド上に列として表示しないが、既存セルの数量・単価データは保持されたままであり、合計金額（`SheetRow.totalAmount`、DBトリガーで自動更新）やCSV出力（[ExportDailySheetToCsvUsecase](../../domain/usecases/export_daily_sheet_to_csv_usecase.md)）は全列（非表示含む）を対象に計算するため、表示のON/OFFのみで金額に影響を与えない。
+2. 価格対象の列（`isPriced=true`）を、`_groupByPrice`で現在の単価（`widget.unitPricesByColumnId`）が同額のものが隣接するよう並べ替える。価格ごとの初出順を保つ安定グルーピングとし、単価未登録の列は元の位置を保つ。これにより、元々離れた位置にあった同額の列（例:「二階堂・だいやめ」と「黒霧島」がともに700円）も[VoucherHeaderRow](./voucher_header_row.md)側で1セルにまとめて表示できる。
+3. 非価格対象の列（MEMO）は、常に2.の結果より後ろに描画する。ヘッダー管理画面（FR-6）で列を追加すると`displayOrder`はMEMOより後ろになるため、`displayOrder`のみに従うとMEMOの後ろに新しい列が描画されてしまう。これを避けるため、描画順では非価格対象の列を常に末尾に固定する。
+
+`_visibleHeaders`は[VoucherHeaderRow](./voucher_header_row.md)への列一覧・価格列＋MEMO列領域の描画幅（`middleWidth`）・各行のセル一覧（`_priceCellsFor`）のいずれにも共通で用いるため、ヘッダー行とデータ行の列の並びは常に一致する。
 
 ## 「行を追加」ボタンの配置
 

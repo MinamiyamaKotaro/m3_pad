@@ -5,20 +5,25 @@ import '../../../../core/utils/currency_format.dart';
 import '../../domain/entities/enums/enums.dart';
 import '../../domain/entities/header.dart';
 
-/// カテゴリーごとの背景色（FR-6、視認性優先の色分け）。
-const Map<HeaderCategory, Color> _categoryColors = <HeaderCategory, Color>{
-  HeaderCategory.drink: Color(0xFFDCEEFF),
-  HeaderCategory.bottle: Color(0xFFF3E3FF),
-  HeaderCategory.food: Color(0xFFE3F5DC),
+/// カテゴリーごとの文字色（FR-6、視認性優先の色分け）。背景色は変えず、
+/// 文字色のみで区別する。
+const Map<HeaderCategory, Color> _categoryTextColors = <HeaderCategory, Color>{
+  HeaderCategory.drink: Color(0xFF0B63B0),
+  HeaderCategory.bottle: Color(0xFF7A2FB0),
+  HeaderCategory.food: Color(0xFF1E7A32),
 };
 
 /// 伝票入力画面の列名・単価を固定表示するヘッダー行ウィジェット。
 ///
 /// 紙伝票のヘッダー行固定表示（FR-1）に対応する。現在の単価が同額の列は
-/// 1つのセル内にまとめて改行表示し（FR-6）、カテゴリーごとに背景色を変える。
-/// 表示対象の列（`isVisible=true`）のみを受け取る想定で、非表示列の除外は
-/// 呼び出し元（[VoucherSheetGrid](./voucher_sheet_grid.dart)）が行う。
-/// 画面内でのみ使用する。
+/// 1つのセル内にまとめて改行表示し（FR-6）、カテゴリーごとに文字色を変える
+/// （背景色は変えない）。列名はカテゴリーによらず全て太字で表示する。
+/// 列の並び順（同額グルーピングのための並べ替え・MEMOを末尾に保つ処理）は
+/// 呼び出し元（[VoucherSheetGrid](./voucher_sheet_grid.dart)）が行い、本
+/// ウィジェットは受け取った順序のまま隣接する同額列を1セルにまとめる。
+/// 表示対象の列（`isVisible=true`）のみを受け取る想定で、非表示列の除外も
+/// [VoucherSheetGrid](./voucher_sheet_grid.dart)が行う。画面内でのみ使用
+/// する。
 class VoucherHeaderRow extends StatelessWidget {
   /// [VoucherHeaderRow] を生成する。
   const VoucherHeaderRow({
@@ -77,47 +82,43 @@ class VoucherHeaderRow extends StatelessWidget {
       decoration: BoxDecoration(color: surface),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: _groupByPrice()
-            .map(
-              (final List<Header> group) => Container(
-                width: 96.0 * group.length,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 6,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: _categoryColors[group.first.category] ?? surface,
-                  border: Border(
-                    right: BorderSide(color: outline),
-                    bottom: BorderSide(color: outline),
-                  ),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Text(
-                      group
-                          .map((final Header header) => header.name)
-                          .join('\n'),
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.labelMedium,
-                    ),
-                    if (group.first.isPriced &&
-                        unitPricesByColumnId.containsKey(
-                          group.first.columnId,
-                        ))
-                      Text(
-                        formatYen(
-                          unitPricesByColumnId[group.first.columnId]!,
-                        ),
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.labelSmall,
-                      ),
-                  ],
-                ),
+        children: _groupByPrice().map((final List<Header> group) {
+          final Color? textColor = _categoryTextColors[group.first.category];
+          return Container(
+            width: 96.0 * group.length,
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+            decoration: BoxDecoration(
+              color: surface,
+              border: Border(
+                right: BorderSide(color: outline),
+                bottom: BorderSide(color: outline),
               ),
-            )
-            .toList(),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Text(
+                  group.map((final Header header) => header.name).join('\n'),
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: textColor,
+                      ),
+                ),
+                if (group.first.isPriced &&
+                    unitPricesByColumnId.containsKey(group.first.columnId))
+                  Text(
+                    formatYen(unitPricesByColumnId[group.first.columnId]!),
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: textColor,
+                        ),
+                  ),
+              ],
+            ),
+          );
+        }).toList(),
       ),
     );
   }

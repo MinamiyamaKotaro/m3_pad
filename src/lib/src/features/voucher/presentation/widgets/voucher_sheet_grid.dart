@@ -188,12 +188,59 @@ class _VoucherSheetGridState extends State<VoucherSheetGrid> {
     super.dispose();
   }
 
-  /// 表示対象の列一覧（`isVisible=true`のみ）。非表示列は伝票グリッド上の
-  /// 列としては描画しないが、既存セルの数量・単価・合計金額計算には
-  /// 影響しない（[_computeRowHeights]・合計金額の算出は全列を対象とする
-  /// ロジック側で行うため）。
-  List<Header> get _visibleHeaders =>
-      widget.headers.where((final Header header) => header.isVisible).toList();
+  /// 表示・描画順の列一覧を組み立てる。
+  ///
+  /// 1. `isVisible=true`の列のみを対象とする（非表示列は伝票グリッド上の
+  ///    列としては描画しないが、既存セルの数量・単価・合計金額計算には
+  ///    影響しない。[_computeRowHeights]・合計金額の算出は全列を対象とする
+  ///    ロジック側で行うため）。
+  /// 2. 価格対象の列（`isPriced=true`）を、現在の単価が同額のものが隣接
+  ///    するよう並べ替える（[VoucherHeaderRow](./voucher_header_row.dart)
+  ///    が隣接する同額列を1セルにまとめて改行表示するため）。並べ替えは
+  ///    価格ごとの初出順を保つ安定グルーピングとし、単価未登録・非価格
+  ///    対象の列は元の位置を保つ。
+  /// 3. 非価格対象の列（MEMO）は、常に価格対象の列より後ろに描画する
+  ///    （ヘッダー管理画面で列を追加すると`displayOrder`がMEMOより後ろに
+  ///    なるため、描画順で補正する）。
+  List<Header> get _visibleHeaders {
+    final List<Header> visible = widget.headers
+        .where((final Header header) => header.isVisible)
+        .toList();
+    final List<Header> priced = <Header>[];
+    final List<Header> nonPriced = <Header>[];
+    for (final Header header in visible) {
+      if (header.isPriced) {
+        priced.add(header);
+      } else {
+        nonPriced.add(header);
+      }
+    }
+    return <Header>[..._groupByPrice(priced), ...nonPriced];
+  }
+
+  /// [headers] を、現在の単価（`widget.unitPricesByColumnId`）が同額のもの
+  /// が隣接するよう並べ替える。価格ごとの初出順を保つ安定グルーピングと
+  /// する。
+  List<Header> _groupByPrice(final List<Header> headers) {
+    final Map<int, List<Header>> headersByPrice = <int, List<Header>>{};
+    final List<Object> firstSeenOrder = <Object>[];
+    for (final Header header in headers) {
+      final int? price = widget.unitPricesByColumnId[header.columnId];
+      if (price == null) {
+        firstSeenOrder.add(header);
+        continue;
+      }
+      if (!headersByPrice.containsKey(price)) {
+        headersByPrice[price] = <Header>[];
+        firstSeenOrder.add(price);
+      }
+      headersByPrice[price]!.add(header);
+    }
+    return <Header>[
+      for (final Object key in firstSeenOrder)
+        if (key is Header) key else ...headersByPrice[key as int]!,
+    ];
+  }
 
   @override
   Widget build(final BuildContext context) {
@@ -267,7 +314,9 @@ class _VoucherSheetGridState extends State<VoucherSheetGrid> {
             border: _cellBorder(context),
             child: Text(
               'お名前',
-              style: Theme.of(context).textTheme.labelMedium,
+              style: Theme.of(
+                context,
+              ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
           ),
           Expanded(
@@ -394,7 +443,12 @@ class _VoucherSheetGridState extends State<VoucherSheetGrid> {
                 border: _cellBorder(context),
                 child: Text(
                   '合計金額',
-                  style: Theme.of(context).textTheme.labelMedium,
+                  style: Theme.of(
+                    context,
+                  )
+                      .textTheme
+                      .labelMedium
+                      ?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ),
               _fixedCell(
@@ -402,8 +456,15 @@ class _VoucherSheetGridState extends State<VoucherSheetGrid> {
                 height: _headerHeight,
                 width: _staffColWidth,
                 border: _cellBorder(context),
-                child:
-                    Text('担当', style: Theme.of(context).textTheme.labelMedium),
+                child: Text(
+                  '担当',
+                  style: Theme.of(
+                    context,
+                  )
+                      .textTheme
+                      .labelMedium
+                      ?.copyWith(fontWeight: FontWeight.bold),
+                ),
               ),
             ],
           ),
