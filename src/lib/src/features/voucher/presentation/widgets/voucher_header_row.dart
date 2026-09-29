@@ -40,6 +40,7 @@ class VoucherHeaderRow extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: headers
             .map(
               (final Header header) => Container(
@@ -55,7 +56,7 @@ class VoucherHeaderRow extends StatelessWidget {
                   ),
                 ),
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
                     Text(
                       header.name,

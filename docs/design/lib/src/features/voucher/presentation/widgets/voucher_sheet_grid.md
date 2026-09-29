@@ -3,6 +3,7 @@
 | 新規作成・更新日 | 作成・更新者名 | 作成・更新内容 |
 |---|---|---|
 | 2026-09-29 | minamiyama | 新規作成。[docs/ui/wireframe](../../../../../../../ui/wireframe/app.js)（`table.sheet`の`position: sticky`によるヘッダー行/本日の合計行/お名前列/合計金額列/担当列の固定表示）を正として、旧`VoucherSheetPage`内のスクロール実装（縦横とも単純な`SingleChildScrollView`のネストのみで固定表示なし）を置き換え。旧`VoucherDataRow`を廃止し、[VoucherNameCell](./voucher_name_cell.md)・[VoucherTotalCell](./voucher_total_cell.md)・[VoucherStaffSelectCell](./voucher_staff_select_cell.md)に分割 |
+| 2026-09-29 | minamiyama | 「合計金額」列の金額・決済方法別内訳（[VoucherDailySummaryRow](./voucher_daily_summary_row.md)）が折り返して下に回り込んでいたのを修正するため、列幅を96pxから140pxへ拡張。あわせて本日の合計行における「合計金額」列セルの右罫線を削除 |
 
 ## 概要
 

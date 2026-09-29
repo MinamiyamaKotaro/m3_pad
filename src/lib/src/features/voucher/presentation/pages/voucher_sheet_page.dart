@@ -47,17 +47,55 @@ class VoucherSheetPage extends ConsumerStatefulWidget {
 }
 
 class _VoucherSheetPageState extends ConsumerState<VoucherSheetPage> {
+  static const List<String> _weekdayNames = <String>[
+    '月',
+    '火',
+    '水',
+    '木',
+    '金',
+    '土',
+    '日',
+  ];
+
+  /// 表示中の営業日。カレンダーでの選択に応じて更新する。
+  late DateTime _businessDate;
+
   @override
   void initState() {
     super.initState();
+    _businessDate = widget.businessDate;
     unawaited(
       Future<void>.microtask(
         () => ref.read(voucherSheetNotifierProvider.notifier).load(
               sheetTemplateId: widget.sheetTemplateId,
-              businessDate: widget.businessDate,
+              businessDate: _businessDate,
             ),
       ),
     );
+  }
+
+  /// 営業日を「M月D日 X曜日」形式に整形する。
+  String _formatBusinessDate(final DateTime date) {
+    final String weekday = _weekdayNames[date.weekday - 1];
+    return '${date.month}月${date.day}日 $weekday曜日';
+  }
+
+  Future<void> _pickBusinessDate(final BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _businessDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2100),
+    );
+    if (picked == null || !mounted) {
+      return;
+    }
+    setState(() {
+      _businessDate = picked;
+    });
+    await ref
+        .read(voucherSheetNotifierProvider.notifier)
+        .load(sheetTemplateId: widget.sheetTemplateId, businessDate: picked);
   }
 
   @override
@@ -112,12 +150,11 @@ class _VoucherSheetPageState extends ConsumerState<VoucherSheetPage> {
           ],
         ),
         actions: <Widget>[
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Center(
-              child: Text(
-                '${widget.businessDate.month}月${widget.businessDate.day}日',
-              ),
+          InkWell(
+            onTap: () => _pickBusinessDate(context),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Center(child: Text(_formatBusinessDate(_businessDate))),
             ),
           ),
           IconButton(
@@ -157,7 +194,7 @@ class _VoucherSheetPageState extends ConsumerState<VoucherSheetPage> {
               ElevatedButton(
                 onPressed: () => notifier.retry(
                   sheetTemplateId: widget.sheetTemplateId,
-                  businessDate: widget.businessDate,
+                  businessDate: _businessDate,
                 ),
                 child: const Text('再試行'),
               ),

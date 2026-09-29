@@ -168,7 +168,7 @@ class VoucherSheetGrid extends StatefulWidget {
 class _VoucherSheetGridState extends State<VoucherSheetGrid> {
   static const double _nameColWidth = 140;
   static const double _priceColWidth = 96;
-  static const double _totalColWidth = 96;
+  static const double _totalColWidth = 140;
   static const double _staffColWidth = 96;
   static const double _headerHeight = 72;
   static const double _rowHeight = 56;
@@ -363,7 +363,12 @@ class _VoucherSheetGridState extends State<VoucherSheetGrid> {
                   decoration: BoxDecoration(
                     color:
                         Theme.of(context).colorScheme.surfaceContainerHighest,
-                    border: _cellBorder(context, top: true, bottom: false),
+                    border: _cellBorder(
+                      context,
+                      top: true,
+                      right: false,
+                      bottom: false,
+                    ),
                   ),
                   child: VoucherDailySummaryRow(summary: widget.dailySummary),
                 ),
