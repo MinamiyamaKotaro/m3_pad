@@ -3,6 +3,7 @@
 | 新規作成・更新日 | 作成・更新者名 | 作成・更新内容 |
 |---|---|---|
 | 2026-09-25 | minamiyama | 新規作成 |
+| 2026-09-29 | minamiyama | `update`を追加（FR-6） |
 
 ## 処理概要
 
@@ -22,6 +23,8 @@ sequenceDiagram
     Impl->>D: findById(columnId)
     U->>Impl: findByTemplateId(sheetTemplateId)
     Impl->>D: findByTemplateId(sheetTemplateId)
+    U->>Impl: update(header)
+    Impl->>D: update(HeaderModel化)
     U->>Impl: updateDisplayOrders(displayOrderByColumnId)
     Impl->>D: updateDisplayOrders(displayOrderByColumnId)
     U->>Impl: updateStatus(columnId, status)
@@ -101,6 +104,32 @@ sequenceDiagram
 
 ### 処理詳細
 1. [HeaderLocalDataSource.findByTemplateId](../datasources/header_local_datasource.md)を呼び出し、結果をそのまま返却する。
+
+## update
+
+### 処理概要
+[HeaderLocalDataSource.update](../datasources/header_local_datasource.md)に処理を委譲する。
+
+### input
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | バリデーション | 備考 |
+|---|---|---|---|---|---|
+| 列 | header | - | [Header](../../domain/entities/header.md) | 必須 | - |
+
+### output
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | 備考 |
+|---|---|---|---|---|
+| - | - | - | void | - |
+
+### exception
+
+| exception論理名 | exception物理名 | エラーコード | エラーメッセージ | 備考 |
+|---|---|---|---|---|
+| レコード未検出 | [RecordNotFoundException](../../../../core/errors/record_not_found_exception.md) | - | - | [HeaderLocalDataSource.update](../datasources/header_local_datasource.md)からそのまま伝播 |
+
+### 処理詳細
+1. `header`を[HeaderModel](../models/header_model.md)へ変換し、[HeaderLocalDataSource.update](../datasources/header_local_datasource.md)を呼び出す。
 
 ## updateDisplayOrders
 

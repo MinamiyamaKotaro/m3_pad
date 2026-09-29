@@ -3,10 +3,11 @@
 | 新規作成・更新日 | 作成・更新者名 | 作成・更新内容 |
 |---|---|---|
 | 2026-09-25 | minamiyama | 新規作成（domain層インターフェースとして定義） |
+| 2026-09-29 | minamiyama | `findByTemplateIdAndDateRange`を追加（CSV期間出力、[ExportSheetsToCsvByDateRangeUsecase](../usecases/export_sheets_to_csv_by_date_range_usecase.md)参照、FR-3） |
 
 ## 概要
 
-[SheetInstance](../entities/sheet_instance.md)に対する永続化・検索の契約のみを定義する抽象クラス。実装は[SheetInstanceRepositoryImpl](../../data/repositories/sheet_instance_repository_impl.md)が担う。[OpenSheetInstanceUsecase](../usecases/open_sheet_instance_usecase.md)・[InputCellUsecase](../usecases/input_cell_usecase.md)・[ExportDailySheetToCsvUsecase](../usecases/export_daily_sheet_to_csv_usecase.md)が依存する。
+[SheetInstance](../entities/sheet_instance.md)に対する永続化・検索の契約のみを定義する抽象クラス。実装は[SheetInstanceRepositoryImpl](../../data/repositories/sheet_instance_repository_impl.md)が担う。[OpenSheetInstanceUsecase](../usecases/open_sheet_instance_usecase.md)・[InputCellUsecase](../usecases/input_cell_usecase.md)・[ExportDailySheetToCsvUsecase](../usecases/export_daily_sheet_to_csv_usecase.md)・[ExportSheetsToCsvByDateRangeUsecase](../usecases/export_sheets_to_csv_by_date_range_usecase.md)が依存する。
 
 ## メソッド一覧
 
@@ -74,6 +75,30 @@
 | 項目論理名 | 項目物理名 | カプセルの型 | データ型 | 備考 |
 |---|---|---|---|---|
 | 伝票インスタンス | - | optional | [SheetInstance](../entities/sheet_instance.md) | 未作成の場合は`null` |
+
+#### exception
+
+なし
+
+### findByTemplateIdAndDateRange
+
+| 項目 | 内容 |
+|---|---|
+| シグネチャ | `Future<List<SheetInstance>> findByTemplateIdAndDateRange(String sheetTemplateId, DateTime from, DateTime to)` |
+
+#### input
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | バリデーション | 備考 |
+|---|---|---|---|---|---|
+| 伝票フォーマットID | sheetTemplateId | - | string | 必須 | - |
+| 開始日 | from | - | DateTime | 必須, 日付のみ | 範囲の両端を含む |
+| 終了日 | to | - | DateTime | 必須, 日付のみ | 範囲の両端を含む |
+
+#### output
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | 備考 |
+|---|---|---|---|---|
+| 伝票インスタンス一覧 | - | list | [SheetInstance](../entities/sheet_instance.md) | `businessDate`昇順。該当なしの場合は空リスト |
 
 #### exception
 

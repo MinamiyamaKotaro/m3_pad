@@ -188,9 +188,17 @@ class _VoucherSheetGridState extends State<VoucherSheetGrid> {
     super.dispose();
   }
 
+  /// 表示対象の列一覧（`isVisible=true`のみ）。非表示列は伝票グリッド上の
+  /// 列としては描画しないが、既存セルの数量・単価・合計金額計算には
+  /// 影響しない（[_computeRowHeights]・合計金額の算出は全列を対象とする
+  /// ロジック側で行うため）。
+  List<Header> get _visibleHeaders =>
+      widget.headers.where((final Header header) => header.isVisible).toList();
+
   @override
   Widget build(final BuildContext context) {
-    final double middleWidth = _priceColWidth * widget.headers.length;
+    final List<Header> visibleHeaders = _visibleHeaders;
+    final double middleWidth = _priceColWidth * visibleHeaders.length;
     final List<double> rowHeights = _computeRowHeights(context);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -199,7 +207,14 @@ class _VoucherSheetGridState extends State<VoucherSheetGrid> {
           width: _nameColWidth,
           child: _buildNameColumn(context, rowHeights),
         ),
-        Expanded(child: _buildPriceColumns(context, middleWidth, rowHeights)),
+        Expanded(
+          child: _buildPriceColumns(
+            context,
+            visibleHeaders,
+            middleWidth,
+            rowHeights,
+          ),
+        ),
         SizedBox(
           width: _totalColWidth + _staffColWidth,
           child: _buildTrailingColumns(context, rowHeights),
@@ -298,6 +313,7 @@ class _VoucherSheetGridState extends State<VoucherSheetGrid> {
 
   Widget _buildPriceColumns(
     final BuildContext context,
+    final List<Header> visibleHeaders,
     final double middleWidth,
     final List<double> rowHeights,
   ) =>
@@ -309,7 +325,7 @@ class _VoucherSheetGridState extends State<VoucherSheetGrid> {
               controller: _horizontal.controllers[0],
               scrollDirection: Axis.horizontal,
               child: VoucherHeaderRow(
-                headers: widget.headers,
+                headers: visibleHeaders,
                 unitPricesByColumnId: widget.unitPricesByColumnId,
               ),
             ),
@@ -327,8 +343,11 @@ class _VoucherSheetGridState extends State<VoucherSheetGrid> {
                         height: rowHeights[i],
                         width: middleWidth,
                         child: Row(
-                          children:
-                              _priceCellsFor(widget.rows[i], rowHeights[i]),
+                          children: _priceCellsFor(
+                            visibleHeaders,
+                            widget.rows[i],
+                            rowHeights[i],
+                          ),
                         ),
                       ),
                     Container(
@@ -514,12 +533,16 @@ class _VoucherSheetGridState extends State<VoucherSheetGrid> {
     );
   }
 
-  List<Widget> _priceCellsFor(final SheetRow row, final double rowHeight) {
+  List<Widget> _priceCellsFor(
+    final List<Header> visibleHeaders,
+    final SheetRow row,
+    final double rowHeight,
+  ) {
     final Map<String, SheetCell> cells =
         widget.cellsByRowIdAndColumnId[row.rowId] ??
             const <String, SheetCell>{};
     final bool isEditingRow = widget.editingRowId == row.rowId;
-    return widget.headers.map((final Header header) {
+    return visibleHeaders.map((final Header header) {
       final SheetCell? cell = cells[header.columnId];
       final bool isEditingCell =
           isEditingRow && widget.editingColumnId == header.columnId;

@@ -4,6 +4,7 @@
 |---|---|---|
 | 2026-09-25 | minamiyama | 新規作成 |
 | 2026-09-27 | minamiyama | `update`を追加 |
+| 2026-09-29 | minamiyama | `findByInstanceIds`を追加（FR-3） |
 
 ## 処理概要
 
@@ -27,6 +28,8 @@ sequenceDiagram
     Impl->>D: findMaxRowOrder(sheetInstanceId)
     U->>Impl: findByInstanceId(sheetInstanceId)
     Impl->>D: findByInstanceId(sheetInstanceId)
+    U->>Impl: findByInstanceIds(sheetInstanceIds)
+    Impl->>D: findByInstanceIds(sheetInstanceIds)
 ```
 
 ## insert
@@ -152,3 +155,27 @@ sequenceDiagram
 
 ### 処理詳細
 1. [SheetRowLocalDataSource.findByInstanceId](../datasources/sheet_row_local_datasource.md)を呼び出し、結果をそのまま返却する。
+
+## findByInstanceIds
+
+### 処理概要
+[SheetRowLocalDataSource.findByInstanceIds](../datasources/sheet_row_local_datasource.md)に処理を委譲する。
+
+### input
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | バリデーション | 備考 |
+|---|---|---|---|---|---|
+| 伝票インスタンスID一覧 | sheetInstanceIds | list | string | 必須 | - |
+
+### output
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | 備考 |
+|---|---|---|---|---|
+| 行一覧 | - | list | [SheetRow](../../domain/entities/sheet_row.md) | 実体は[SheetRowModel](../models/sheet_row_model.md)のリスト |
+
+### exception
+
+なし
+
+### 処理詳細
+1. [SheetRowLocalDataSource.findByInstanceIds](../datasources/sheet_row_local_datasource.md)を呼び出し、結果をそのまま返却する。

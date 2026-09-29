@@ -37,13 +37,18 @@ import '../../domain/repositories/staff_repository.dart';
 import '../../domain/repositories/staff_shift_repository.dart';
 import '../../domain/usecases/add_header_usecase.dart';
 import '../../domain/usecases/add_row_usecase.dart';
+import '../../domain/usecases/add_staff_usecase.dart';
 import '../../domain/usecases/create_template_usecase.dart';
 import '../../domain/usecases/export_daily_sheet_to_csv_usecase.dart';
+import '../../domain/usecases/export_sheets_to_csv_by_date_range_usecase.dart';
 import '../../domain/usecases/get_sheet_detail_usecase.dart';
 import '../../domain/usecases/input_cell_usecase.dart';
 import '../../domain/usecases/open_sheet_instance_usecase.dart';
+import '../../domain/usecases/remove_staff_usecase.dart';
+import '../../domain/usecases/update_header_usecase.dart';
 import '../../domain/usecases/update_row_usecase.dart';
 import '../../domain/usecases/update_staff_shift_usecase.dart';
+import '../../domain/usecases/update_staff_usecase.dart';
 
 /// [IdGenerator] を提供するプロバイダ。
 final Provider<IdGenerator> idGeneratorProvider = Provider<IdGenerator>(
@@ -293,6 +298,55 @@ final Provider<ExportDailySheetToCsvUsecase>
     rowRepository: ref.watch(sheetRowRepositoryProvider),
     cellRepository: ref.watch(sheetCellRepositoryProvider),
     customerRepository: ref.watch(customerRepositoryProvider),
+    staffRepository: ref.watch(staffRepositoryProvider),
+  ),
+);
+
+/// [ExportSheetsToCsvByDateRangeUsecase] を提供するプロバイダ。
+final Provider<ExportSheetsToCsvByDateRangeUsecase>
+    exportSheetsToCsvByDateRangeUsecaseProvider =
+    Provider<ExportSheetsToCsvByDateRangeUsecase>(
+  (final Ref ref) => ExportSheetsToCsvByDateRangeUsecase(
+    instanceRepository: ref.watch(sheetInstanceRepositoryProvider),
+    headerRepository: ref.watch(headerRepositoryProvider),
+    rowRepository: ref.watch(sheetRowRepositoryProvider),
+    cellRepository: ref.watch(sheetCellRepositoryProvider),
+    customerRepository: ref.watch(customerRepositoryProvider),
+    staffRepository: ref.watch(staffRepositoryProvider),
+  ),
+);
+
+/// [UpdateHeaderUsecase] を提供するプロバイダ。
+final Provider<UpdateHeaderUsecase> updateHeaderUsecaseProvider =
+    Provider<UpdateHeaderUsecase>(
+  (final Ref ref) => UpdateHeaderUsecase(
+    headerRepository: ref.watch(headerRepositoryProvider),
+    headerPriceRepository: ref.watch(headerPriceRepositoryProvider),
+    idGenerator: ref.watch(idGeneratorProvider),
+  ),
+);
+
+/// [AddStaffUsecase] を提供するプロバイダ。
+final Provider<AddStaffUsecase> addStaffUsecaseProvider =
+    Provider<AddStaffUsecase>(
+  (final Ref ref) => AddStaffUsecase(
+    staffRepository: ref.watch(staffRepositoryProvider),
+    idGenerator: ref.watch(idGeneratorProvider),
+  ),
+);
+
+/// [UpdateStaffUsecase] を提供するプロバイダ。
+final Provider<UpdateStaffUsecase> updateStaffUsecaseProvider =
+    Provider<UpdateStaffUsecase>(
+  (final Ref ref) => UpdateStaffUsecase(
+    staffRepository: ref.watch(staffRepositoryProvider),
+  ),
+);
+
+/// [RemoveStaffUsecase] を提供するプロバイダ。
+final Provider<RemoveStaffUsecase> removeStaffUsecaseProvider =
+    Provider<RemoveStaffUsecase>(
+  (final Ref ref) => RemoveStaffUsecase(
     staffRepository: ref.watch(staffRepositoryProvider),
   ),
 );

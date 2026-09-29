@@ -34,7 +34,8 @@ class AddHeaderUsecase {
   /// 指定した伝票フォーマットに列を追加する。
   ///
   /// 価格対象の列（[isPriced]=true）の場合は [initialPrice]・
-  /// [effectiveFrom] も同時に登録する。
+  /// [effectiveFrom] も同時に登録する。[category]・[isVisible]は
+  /// ヘッダー管理画面（FR-6）からの追加時に指定する。
   Future<Header> call({
     required final String sheetTemplateId,
     required final String name,
@@ -42,6 +43,8 @@ class AddHeaderUsecase {
     required final bool isPriced,
     final int? initialPrice,
     final DateTime? effectiveFrom,
+    final HeaderCategory category = HeaderCategory.none,
+    final bool isVisible = true,
   }) async {
     await _templateRepository.findById(sheetTemplateId);
     await _headerTypeRepository.findById(typeId);
@@ -70,6 +73,8 @@ class AddHeaderUsecase {
       name: name,
       displayOrder: displayOrder,
       isPriced: isPriced,
+      category: category,
+      isVisible: isVisible,
       status: RecordStatus.active,
       createdAt: now,
       updatedAt: now,

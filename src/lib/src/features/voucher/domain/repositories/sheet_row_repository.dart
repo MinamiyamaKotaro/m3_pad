@@ -20,4 +20,9 @@ abstract interface class SheetRowRepository {
 
   /// [sheetInstanceId] に紐づく行一覧を`rowOrder`昇順で取得する。
   Future<List<SheetRow>> findByInstanceId(final String sheetInstanceId);
+
+  /// 複数の [sheetInstanceIds] に紐づく行を一括取得する。
+  Future<List<SheetRow>> findByInstanceIds(
+    final List<String> sheetInstanceIds,
+  );
 }

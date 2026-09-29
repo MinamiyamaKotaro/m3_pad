@@ -6,20 +6,22 @@
 
 import 'dart:async' as _i6;
 
-import 'package:m3_pad/src/core/utils/id_generator.dart' as _i9;
+import 'package:m3_pad/src/core/utils/id_generator.dart' as _i10;
 import 'package:m3_pad/src/features/voucher/domain/entities/customer.dart'
     as _i2;
+import 'package:m3_pad/src/features/voucher/domain/entities/enums/enums.dart'
+    as _i8;
 import 'package:m3_pad/src/features/voucher/domain/entities/sheet_row.dart'
     as _i4;
 import 'package:m3_pad/src/features/voucher/domain/entities/staff.dart' as _i3;
 import 'package:m3_pad/src/features/voucher/domain/repositories/customer_repository.dart'
     as _i5;
 import 'package:m3_pad/src/features/voucher/domain/repositories/sheet_row_repository.dart'
-    as _i8;
+    as _i9;
 import 'package:m3_pad/src/features/voucher/domain/repositories/staff_repository.dart'
     as _i7;
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:mockito/src/dummies.dart' as _i10;
+import 'package:mockito/src/dummies.dart' as _i11;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -123,6 +125,16 @@ class MockCustomerRepository extends _i1.Mock
 /// See the documentation for Mockito's code generation for more information.
 class MockStaffRepository extends _i1.Mock implements _i7.StaffRepository {
   @override
+  _i6.Future<void> insert(_i3.Staff? staff) => (super.noSuchMethod(
+        Invocation.method(
+          #insert,
+          [staff],
+        ),
+        returnValue: _i6.Future<void>.value(),
+        returnValueForMissingStub: _i6.Future<void>.value(),
+      ) as _i6.Future<void>);
+
+  @override
   _i6.Future<_i3.Staff> findById(String? staffId) => (super.noSuchMethod(
         Invocation.method(
           #findById,
@@ -154,13 +166,47 @@ class MockStaffRepository extends _i1.Mock implements _i7.StaffRepository {
         returnValueForMissingStub:
             _i6.Future<List<_i3.Staff>>.value(<_i3.Staff>[]),
       ) as _i6.Future<List<_i3.Staff>>);
+
+  @override
+  _i6.Future<void> updateName(
+    String? staffId,
+    String? name,
+  ) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #updateName,
+          [
+            staffId,
+            name,
+          ],
+        ),
+        returnValue: _i6.Future<void>.value(),
+        returnValueForMissingStub: _i6.Future<void>.value(),
+      ) as _i6.Future<void>);
+
+  @override
+  _i6.Future<void> updateStatus(
+    String? staffId,
+    _i8.RecordStatus? status,
+  ) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #updateStatus,
+          [
+            staffId,
+            status,
+          ],
+        ),
+        returnValue: _i6.Future<void>.value(),
+        returnValueForMissingStub: _i6.Future<void>.value(),
+      ) as _i6.Future<void>);
 }
 
 /// A class which mocks [SheetRowRepository].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockSheetRowRepository extends _i1.Mock
-    implements _i8.SheetRowRepository {
+    implements _i9.SheetRowRepository {
   @override
   _i6.Future<void> insert(_i4.SheetRow? row) => (super.noSuchMethod(
         Invocation.method(
@@ -226,26 +272,39 @@ class MockSheetRowRepository extends _i1.Mock
         returnValueForMissingStub:
             _i6.Future<List<_i4.SheetRow>>.value(<_i4.SheetRow>[]),
       ) as _i6.Future<List<_i4.SheetRow>>);
+
+  @override
+  _i6.Future<List<_i4.SheetRow>> findByInstanceIds(
+          List<String>? sheetInstanceIds) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #findByInstanceIds,
+          [sheetInstanceIds],
+        ),
+        returnValue: _i6.Future<List<_i4.SheetRow>>.value(<_i4.SheetRow>[]),
+        returnValueForMissingStub:
+            _i6.Future<List<_i4.SheetRow>>.value(<_i4.SheetRow>[]),
+      ) as _i6.Future<List<_i4.SheetRow>>);
 }
 
 /// A class which mocks [IdGenerator].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockIdGenerator extends _i1.Mock implements _i9.IdGenerator {
+class MockIdGenerator extends _i1.Mock implements _i10.IdGenerator {
   @override
   String generate() => (super.noSuchMethod(
         Invocation.method(
           #generate,
           [],
         ),
-        returnValue: _i10.dummyValue<String>(
+        returnValue: _i11.dummyValue<String>(
           this,
           Invocation.method(
             #generate,
             [],
           ),
         ),
-        returnValueForMissingStub: _i10.dummyValue<String>(
+        returnValueForMissingStub: _i11.dummyValue<String>(
           this,
           Invocation.method(
             #generate,

@@ -3,6 +3,7 @@
 | 新規作成・更新日 | 作成・更新者名 | 作成・更新内容 |
 |---|---|---|
 | 2026-09-25 | minamiyama | 新規作成 |
+| 2026-09-29 | minamiyama | `update`を追加（`name`・`category`・`is_visible`の更新、FR-6） |
 
 ## 処理概要
 
@@ -22,6 +23,8 @@ sequenceDiagram
     D->>DB: SELECT * FROM m_header WHERE column_id = ?
     R->>D: findByTemplateId(sheetTemplateId)
     D->>DB: SELECT * FROM m_header WHERE sheet_template_id = ?
+    R->>D: update(model)
+    D->>DB: UPDATE m_header SET name=?, category=?, is_visible=? WHERE column_id=?
     R->>D: updateDisplayOrders(displayOrderByColumnId)
     D->>DB: UPDATE m_header SET display_order = CASE ... END
     R->>D: updateStatus(columnId, status)
@@ -115,6 +118,39 @@ sequenceDiagram
    SELECT * FROM m_header WHERE sheet_template_id = :sheetTemplateId AND status = 'active' ORDER BY display_order ASC;
    ```
 2. 取得結果を[HeaderModel.fromMap](../models/header_model.md)でそれぞれ変換し、リストとして返却する。
+
+## update
+
+### 処理概要
+`columnId`に一致する有効な[HeaderModel](../models/header_model.md)の`name`・`category`・`is_visible`を上書きする。
+
+### input
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | バリデーション | 備考 |
+|---|---|---|---|---|---|
+| 列 | model | - | [HeaderModel](../models/header_model.md) | 必須 | - |
+
+### output
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | 備考 |
+|---|---|---|---|---|
+| - | - | - | void | - |
+
+### exception
+
+| exception論理名 | exception物理名 | エラーコード | エラーメッセージ | 備考 |
+|---|---|---|---|---|
+| レコード未検出 | [RecordNotFoundException](../../../../core/errors/record_not_found_exception.md) | - | - | 対象の`column_id`が存在しない、または既に論理削除済みの場合（UPDATE文の影響行数が0件） |
+
+### 処理詳細
+1. 以下のSQLをDBに対して1回発行する。
+   ```sql
+   UPDATE m_header
+   SET name = :name, category = :category, is_visible = :isVisible, updated_at = :updatedAt
+   WHERE column_id = :columnId AND status = 'active';
+   ```
+   条件a: 影響行数が0件の場合、`RecordNotFoundException`を送出する。\
+   条件b: 影響行数が1件の場合、正常終了とする。
 
 ## updateDisplayOrders
 

@@ -5,10 +5,11 @@
 | 2026-09-25 | minamiyama | 新規作成 |
 | 2026-09-25 | minamiyama | セル検索をMap化しO(n^2)を回避するよう処理詳細を修正 |
 | 2026-09-29 | minamiyama | CSVの列構成に「営業日」「お名前」「合計金額」「担当」を追加（列順: 営業日／お名前／紙伝票の各列（価格列＋MEMO列）／合計金額／担当）。氏名・担当の解決のため[CustomerRepository](../repositories/customer_repository.md)・[StaffRepository](../repositories/staff_repository.md)への依存を追加 |
+| 2026-09-29 | minamiyama | CSV期間出力（[ExportSheetsToCsvByDateRangeUsecase](./export_sheets_to_csv_by_date_range_usecase.md)、FR-3）と行組み立てロジックを共有するため、ヘッダー行・行データの組み立て処理を[csv_sheet_formatter.dart](./csv_sheet_formatter.md)（`csvHeaderLine`・`csvRowLine`・`escapeCsvValue`）へ切り出した。出力結果（列構成・エスケープ仕様）に変更はない |
 
 ## 処理概要
 
-指定した伝票インスタンス（1営業日分の伝票）を、紙伝票と同じ列構成に「営業日」「お名前」「合計金額」「担当」を加えたCSVとして出力するユースケース（FR-3）。[SheetInstanceRepository](../repositories/sheet_instance_repository.md)・[HeaderRepository](../repositories/header_repository.md)・[SheetRowRepository](../repositories/sheet_row_repository.md)・[SheetCellRepository](../repositories/sheet_cell_repository.md)・[CustomerRepository](../repositories/customer_repository.md)・[StaffRepository](../repositories/staff_repository.md)に依存する。本ユースケースはCSV文字列の組み立てまでを責務とし、ファイルへの書き出し・共有はpresentation層が行う。
+指定した伝票インスタンス（1営業日分の伝票）を、紙伝票と同じ列構成に「営業日」「お名前」「合計金額」「担当」を加えたCSVとして出力するユースケース（FR-3）。[SheetInstanceRepository](../repositories/sheet_instance_repository.md)・[HeaderRepository](../repositories/header_repository.md)・[SheetRowRepository](../repositories/sheet_row_repository.md)・[SheetCellRepository](../repositories/sheet_cell_repository.md)・[CustomerRepository](../repositories/customer_repository.md)・[StaffRepository](../repositories/staff_repository.md)・[csv_sheet_formatter.dart](./csv_sheet_formatter.md)に依存する。本ユースケースはCSV文字列の組み立てまでを責務とし、ファイルへの書き出し・共有はpresentation層が行う。行組み立てロジック自体は[csv_sheet_formatter.dart](./csv_sheet_formatter.md)へ切り出し、[ExportSheetsToCsvByDateRangeUsecase](./export_sheets_to_csv_by_date_range_usecase.md)（複数営業日分の期間出力）と共有する。
 
 ## 処理シーケンス図
 
@@ -64,13 +65,8 @@ sequenceDiagram
 6. `cells`を`"rowId:columnId"`をキーとしたMapへ変換し、変数`cellByRowAndColumn`に格納する（O(n)のメモリ内処理。ステップ9での行×列の参照をO(1)にするための事前変換）。
 7. `rows`から顧客IDを抽出し（`customerId`が`null`の行は除く）、[CustomerRepository.findByIds](../repositories/customer_repository.md)で一括取得し、`customerId`をキーとしたMap（変数`customersById`）に変換する（行ごとにループしてDBを呼び出すことはしない）。
 8. [StaffRepository.findAllActive](../repositories/staff_repository.md)を呼び出し、`staffId`をキーとしたMap（変数`staffById`）に変換する。
-9. 「営業日」「お名前」＋`headers`の列名＋「合計金額」「担当」を順に並べたCSVの1行目（ヘッダー行）を組み立て、変数`headerLine`に格納する。営業日は[sqlite_date.formatDateOnly](../../../../core/utils/sqlite_date.md)で`instance.businessDate`を整形した値を用いる。
-10. `rows`を1件ずつ処理し、各行について以下の値をヘッダー順に並べたCSV行を組み立て、変数`rowLines`（リスト）に追加する。
-    (1). 営業日（手順9と同じ整形済み文字列、全行共通）。
-    (2). お名前（`row.customerId`が`null`でなければ`customersById[row.customerId]`の氏名、`null`または未一致の場合は空文字列）。
-    (3). `headers`の各列に対応する`"rowId:columnId"`キーで`cellByRowAndColumn`を参照し（Map参照のためO(1)）、列の`isPriced`に応じて金額または`content`表示の値。
-    (4). 合計金額（`row.totalAmount`）。
-    (5). 担当（`row.staffId`が`null`でなければ`staffById[row.staffId]`の氏名、`null`または未一致の場合は空文字列）。
+9. [csv_sheet_formatter.csvHeaderLine](./csv_sheet_formatter.md)を`headers`で呼び出し、CSVの1行目（ヘッダー行）を変数`headerLine`に格納する。
+10. `rows`を1件ずつ処理し、[csv_sheet_formatter.csvRowLine](./csv_sheet_formatter.md)を`instance`・行・`headers`・`cellByRowAndColumn`・`customersById`・`staffById`で呼び出し、返却値を変数`rowLines`（リスト）に追加する（営業日は[sqlite_date.formatDateOnly](../../../../core/utils/sqlite_date.md)で`instance.businessDate`を整形した値、お名前・担当は`row.customerId`/`row.staffId`を`customersById`/`staffById`で解決した氏名、未一致・`null`の場合は空文字列）。
 11. `headerLine`と`rowLines`を結合したCSV文字列を返却する。
 
 ### 変数一覧

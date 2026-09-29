@@ -153,6 +153,27 @@ class MockSheetInstanceRepository extends _i1.Mock
         returnValue: _i8.Future<_i2.SheetInstance?>.value(),
         returnValueForMissingStub: _i8.Future<_i2.SheetInstance?>.value(),
       ) as _i8.Future<_i2.SheetInstance?>);
+
+  @override
+  _i8.Future<List<_i2.SheetInstance>> findByTemplateIdAndDateRange(
+    String? sheetTemplateId,
+    DateTime? from,
+    DateTime? to,
+  ) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #findByTemplateIdAndDateRange,
+          [
+            sheetTemplateId,
+            from,
+            to,
+          ],
+        ),
+        returnValue:
+            _i8.Future<List<_i2.SheetInstance>>.value(<_i2.SheetInstance>[]),
+        returnValueForMissingStub:
+            _i8.Future<List<_i2.SheetInstance>>.value(<_i2.SheetInstance>[]),
+      ) as _i8.Future<List<_i2.SheetInstance>>);
 }
 
 /// A class which mocks [HeaderRepository].
@@ -202,6 +223,16 @@ class MockHeaderRepository extends _i1.Mock implements _i9.HeaderRepository {
         returnValueForMissingStub:
             _i8.Future<List<_i3.Header>>.value(<_i3.Header>[]),
       ) as _i8.Future<List<_i3.Header>>);
+
+  @override
+  _i8.Future<void> update(_i3.Header? header) => (super.noSuchMethod(
+        Invocation.method(
+          #update,
+          [header],
+        ),
+        returnValue: _i8.Future<void>.value(),
+        returnValueForMissingStub: _i8.Future<void>.value(),
+      ) as _i8.Future<void>);
 
   @override
   _i8.Future<void> updateDisplayOrders(
@@ -298,6 +329,19 @@ class MockSheetRowRepository extends _i1.Mock
         Invocation.method(
           #findByInstanceId,
           [sheetInstanceId],
+        ),
+        returnValue: _i8.Future<List<_i4.SheetRow>>.value(<_i4.SheetRow>[]),
+        returnValueForMissingStub:
+            _i8.Future<List<_i4.SheetRow>>.value(<_i4.SheetRow>[]),
+      ) as _i8.Future<List<_i4.SheetRow>>);
+
+  @override
+  _i8.Future<List<_i4.SheetRow>> findByInstanceIds(
+          List<String>? sheetInstanceIds) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #findByInstanceIds,
+          [sheetInstanceIds],
         ),
         returnValue: _i8.Future<List<_i4.SheetRow>>.value(<_i4.SheetRow>[]),
         returnValueForMissingStub:
@@ -428,6 +472,16 @@ class MockCustomerRepository extends _i1.Mock
 /// See the documentation for Mockito's code generation for more information.
 class MockStaffRepository extends _i1.Mock implements _i15.StaffRepository {
   @override
+  _i8.Future<void> insert(_i6.Staff? staff) => (super.noSuchMethod(
+        Invocation.method(
+          #insert,
+          [staff],
+        ),
+        returnValue: _i8.Future<void>.value(),
+        returnValueForMissingStub: _i8.Future<void>.value(),
+      ) as _i8.Future<void>);
+
+  @override
   _i8.Future<_i6.Staff> findById(String? staffId) => (super.noSuchMethod(
         Invocation.method(
           #findById,
@@ -459,4 +513,38 @@ class MockStaffRepository extends _i1.Mock implements _i15.StaffRepository {
         returnValueForMissingStub:
             _i8.Future<List<_i6.Staff>>.value(<_i6.Staff>[]),
       ) as _i8.Future<List<_i6.Staff>>);
+
+  @override
+  _i8.Future<void> updateName(
+    String? staffId,
+    String? name,
+  ) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #updateName,
+          [
+            staffId,
+            name,
+          ],
+        ),
+        returnValue: _i8.Future<void>.value(),
+        returnValueForMissingStub: _i8.Future<void>.value(),
+      ) as _i8.Future<void>);
+
+  @override
+  _i8.Future<void> updateStatus(
+    String? staffId,
+    _i10.RecordStatus? status,
+  ) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #updateStatus,
+          [
+            staffId,
+            status,
+          ],
+        ),
+        returnValue: _i8.Future<void>.value(),
+        returnValueForMissingStub: _i8.Future<void>.value(),
+      ) as _i8.Future<void>);
 }

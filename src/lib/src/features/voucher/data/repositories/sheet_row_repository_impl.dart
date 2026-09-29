@@ -45,6 +45,16 @@ class SheetRowRepositoryImpl implements SheetRowRepository {
     return result;
   }
 
+  @override
+  Future<List<SheetRow>> findByInstanceIds(
+    final List<String> sheetInstanceIds,
+  ) async {
+    final List<SheetRow> result = await _dataSource.findByInstanceIds(
+      sheetInstanceIds,
+    );
+    return result;
+  }
+
   SheetRowModel _toModel(final SheetRow row) => SheetRowModel(
         rowId: row.rowId,
         sheetInstanceId: row.sheetInstanceId,

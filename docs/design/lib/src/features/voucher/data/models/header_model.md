@@ -3,6 +3,7 @@
 | 新規作成・更新日 | 作成・更新者名 | 作成・更新内容 |
 |---|---|---|
 | 2026-09-25 | minamiyama | 新規作成 |
+| 2026-09-29 | minamiyama | [Header](../../domain/entities/header.md)への`category`・`isVisible`追加（FR-6）に伴い、`fromMap`/`toMap`を対応するカラム（`category`・`is_visible`）に対応させた |
 
 ## 概要
 
@@ -39,7 +40,7 @@ SQLiteの行（`Map<String, dynamic>`）から`HeaderModel`を生成する。
 なし
 
 ### 処理詳細
-1. `map['column_id']`→`columnId`、`map['sheet_template_id']`→`sheetTemplateId`、`map['type_id']`→`typeId`、`map['name']`→`name`、`map['display_order']`→`displayOrder`、`map['is_priced']`（0/1）→boolへ変換して`isPriced`、`map['status']`→`RecordStatus`へ変換して`status`、`map['created_at']`/`map['updated_at']`→DateTimeへ変換してそれぞれ対応付け、`HeaderModel`を生成する。
+1. `map['column_id']`→`columnId`、`map['sheet_template_id']`→`sheetTemplateId`、`map['type_id']`→`typeId`、`map['name']`→`name`、`map['display_order']`→`displayOrder`、`map['is_priced']`（0/1）→boolへ変換して`isPriced`、`map['category']`→[HeaderCategory](../../domain/entities/enums/header_category.md)へ変換して`category`、`map['is_visible']`（0/1）→boolへ変換して`isVisible`、`map['status']`→`RecordStatus`へ変換して`status`、`map['created_at']`/`map['updated_at']`→DateTimeへ変換してそれぞれ対応付け、`HeaderModel`を生成する。
 2. 生成したインスタンスを返却する。
 
 ## toMap
@@ -55,7 +56,7 @@ SQLiteの行（`Map<String, dynamic>`）から`HeaderModel`を生成する。
 
 | 項目論理名 | 項目物理名 | カプセルの型 | データ型 | 備考 |
 |---|---|---|---|---|
-| DB行データ | - | map | string(key), dynamic(value) | `isPriced`はint(0/1)、`status`はenum名の文字列、日時はISO8601文字列に変換する |
+| DB行データ | - | map | string(key), dynamic(value) | `isPriced`・`isVisible`はint(0/1)、`category`・`status`はenum名の文字列、日時はISO8601文字列に変換する |
 
 ### exception
 

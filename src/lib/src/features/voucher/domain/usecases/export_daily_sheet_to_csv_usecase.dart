@@ -1,4 +1,3 @@
-import '../../../../core/utils/sqlite_date.dart';
 import '../entities/customer.dart';
 import '../entities/header.dart';
 import '../entities/sheet_cell.dart';
@@ -11,6 +10,7 @@ import '../repositories/sheet_cell_repository.dart';
 import '../repositories/sheet_instance_repository.dart';
 import '../repositories/sheet_row_repository.dart';
 import '../repositories/staff_repository.dart';
+import 'csv_sheet_formatter.dart';
 
 /// 指定した伝票インスタンス（1営業日分の伝票）を、紙伝票と同じ列構成の
 /// CSVとして出力するユースケース（FR-3）。
@@ -80,45 +80,19 @@ class ExportDailySheetToCsvUsecase {
       for (final Staff staff in staffRoster) staff.staffId: staff,
     };
 
-    final String businessDate = formatDateOnly(instance.businessDate);
-    final List<String> headerLine = <String>[
-      _escape('営業日'),
-      _escape('お名前'),
-      ...headers.map((final Header header) => _escape(header.name)),
-      _escape('合計金額'),
-      _escape('担当'),
-    ];
+    final List<String> rowLines = rows
+        .map(
+          (final SheetRow row) => csvRowLine(
+            instance: instance,
+            row: row,
+            headers: headers,
+            cellByRowAndColumn: cellByRowAndColumn,
+            customersById: customersById,
+            staffById: staffById,
+          ),
+        )
+        .toList();
 
-    final List<String> rowLines = rows.map((final SheetRow row) {
-      final Customer? customer =
-          row.customerId == null ? null : customersById[row.customerId];
-      final Staff? staff = row.staffId == null ? null : staffById[row.staffId];
-      final List<String> values = <String>[
-        _escape(businessDate),
-        _escape(customer?.name ?? ''),
-        ...headers.map((final Header header) {
-          final SheetCell? cell =
-              cellByRowAndColumn['${row.rowId}:${header.columnId}'];
-          if (cell == null) {
-            return '';
-          }
-          return header.isPriced
-              ? _escape((cell.amount ?? 0).toString())
-              : _escape(cell.content ?? '');
-        }),
-        _escape(row.totalAmount.toString()),
-        _escape(staff?.name ?? ''),
-      ];
-      return values.join(',');
-    }).toList();
-
-    return <String>[headerLine.join(','), ...rowLines].join('\n');
-  }
-
-  String _escape(final String value) {
-    if (value.contains(',') || value.contains('"') || value.contains('\n')) {
-      return '"${value.replaceAll('"', '""')}"';
-    }
-    return value;
+    return <String>[csvHeaderLine(headers).join(','), ...rowLines].join('\n');
   }
 }

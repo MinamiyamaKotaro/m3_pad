@@ -54,4 +54,26 @@ class SheetInstanceLocalDataSource {
     }
     return SheetInstanceModel.fromMap(rows.first);
   }
+
+  /// [sheetTemplateId] に紐づき、[from]〜[to]（両端含む）の営業日を持つ
+  /// 有効な伝票インスタンス一覧を`business_date`昇順で取得する。
+  Future<List<SheetInstanceModel>> findByTemplateIdAndDateRange(
+    final String sheetTemplateId,
+    final DateTime from,
+    final DateTime to,
+  ) async {
+    final List<Map<String, Object?>> rows = await _db.query(
+      't_sheet_instance',
+      where: 'sheet_template_id = ? AND business_date BETWEEN ? AND ? '
+          'AND status = ?',
+      whereArgs: <Object?>[
+        sheetTemplateId,
+        formatDateOnly(from),
+        formatDateOnly(to),
+        RecordStatus.active.dbValue,
+      ],
+      orderBy: 'business_date ASC',
+    );
+    return rows.map(SheetInstanceModel.fromMap).toList();
+  }
 }

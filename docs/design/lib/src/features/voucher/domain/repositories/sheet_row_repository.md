@@ -4,10 +4,11 @@
 |---|---|---|
 | 2026-09-25 | minamiyama | 新規作成（domain層インターフェースとして定義） |
 | 2026-09-27 | minamiyama | `update`を追加（お名前・担当・決済方法の後からの変更に対応、[UpdateRowUsecase](../usecases/update_row_usecase.md)参照） |
+| 2026-09-29 | minamiyama | `findByInstanceIds`を追加（複数営業日分の一括取得、[ExportSheetsToCsvByDateRangeUsecase](../usecases/export_sheets_to_csv_by_date_range_usecase.md)参照、FR-3） |
 
 ## 概要
 
-[SheetRow](../entities/sheet_row.md)に対する永続化・検索の契約のみを定義する抽象クラス。実装は[SheetRowRepositoryImpl](../../data/repositories/sheet_row_repository_impl.md)が担う。[AddRowUsecase](../usecases/add_row_usecase.md)・[InputCellUsecase](../usecases/input_cell_usecase.md)・[UpdateRowUsecase](../usecases/update_row_usecase.md)・[ExportDailySheetToCsvUsecase](../usecases/export_daily_sheet_to_csv_usecase.md)が依存する。`totalAmount`はDBトリガーにより自動更新されるため、`update`の対象には含めない。
+[SheetRow](../entities/sheet_row.md)に対する永続化・検索の契約のみを定義する抽象クラス。実装は[SheetRowRepositoryImpl](../../data/repositories/sheet_row_repository_impl.md)が担う。[AddRowUsecase](../usecases/add_row_usecase.md)・[InputCellUsecase](../usecases/input_cell_usecase.md)・[UpdateRowUsecase](../usecases/update_row_usecase.md)・[ExportDailySheetToCsvUsecase](../usecases/export_daily_sheet_to_csv_usecase.md)・[ExportSheetsToCsvByDateRangeUsecase](../usecases/export_sheets_to_csv_by_date_range_usecase.md)が依存する。`totalAmount`はDBトリガーにより自動更新されるため、`update`の対象には含めない。
 
 ## メソッド一覧
 
@@ -120,6 +121,28 @@
 | 項目論理名 | 項目物理名 | カプセルの型 | データ型 | 備考 |
 |---|---|---|---|---|
 | 行一覧 | - | list | [SheetRow](../entities/sheet_row.md) | `rowOrder`昇順。該当なしの場合は空リスト |
+
+#### exception
+
+なし
+
+### findByInstanceIds
+
+| 項目 | 内容 |
+|---|---|
+| シグネチャ | `Future<List<SheetRow>> findByInstanceIds(List<String> sheetInstanceIds)` |
+
+#### input
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | バリデーション | 備考 |
+|---|---|---|---|---|---|
+| 伝票インスタンスID一覧 | sheetInstanceIds | list | string | 必須 | 複数営業日分を1回のクエリで取得する（CSV期間出力での繰り返しDB呼び出し回避） |
+
+#### output
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | 備考 |
+|---|---|---|---|---|
+| 行一覧 | - | list | [SheetRow](../entities/sheet_row.md) | `sheetInstanceId`・`rowOrder`昇順。該当なしの場合は空リスト |
 
 #### exception
 

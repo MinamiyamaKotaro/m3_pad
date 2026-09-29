@@ -11,6 +11,11 @@ class StaffLocalDataSource {
 
   final Database _db;
 
+  /// 新しい [StaffModel] を1件永続化する。
+  Future<void> insert(final StaffModel model) async {
+    await _db.insert('m_staff', model.toMap());
+  }
+
   /// [staffId] に一致する有効なスタッフを1件取得する。
   Future<StaffModel> findById(final String staffId) async {
     final List<Map<String, Object?>> rows = await _db.query(
@@ -32,5 +37,31 @@ class StaffLocalDataSource {
       whereArgs: <Object?>[RecordStatus.active.dbValue],
     );
     return rows.map(StaffModel.fromMap).toList();
+  }
+
+  /// [staffId] の氏名を[name]に更新する。
+  Future<void> updateName(final String staffId, final String name) async {
+    final int affected = await _db.update(
+      'm_staff',
+      <String, Object?>{'name': name},
+      where: 'staff_id = ? AND status = ?',
+      whereArgs: <Object?>[staffId, RecordStatus.active.dbValue],
+    );
+    if (affected == 0) {
+      throw RecordNotFoundException(entityName: 'Staff', id: staffId);
+    }
+  }
+
+  /// [staffId] の論理削除状態を更新する。
+  Future<void> updateStatus(
+    final String staffId,
+    final RecordStatus status,
+  ) async {
+    await _db.update(
+      'm_staff',
+      <String, Object?>{'status': status.dbValue},
+      where: 'staff_id = ?',
+      whereArgs: <Object?>[staffId],
+    );
   }
 }

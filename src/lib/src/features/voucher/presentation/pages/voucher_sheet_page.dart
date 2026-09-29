@@ -14,6 +14,7 @@ import '../controllers/voucher_sheet_notifier.dart';
 import '../controllers/voucher_sheet_state.dart';
 import '../widgets/voucher_sheet_grid.dart';
 import '../widgets/voucher_staff_bar.dart';
+import 'settings_menu_page.dart';
 
 /// 伝票入力画面（画面ID: `MMM_001_VOUCHER`）。
 ///
@@ -168,6 +169,16 @@ class _VoucherSheetPageState extends ConsumerState<VoucherSheetPage> {
             onPressed: state.status == VoucherSheetStatus.success
                 ? notifier.exportCsv
                 : null,
+          ),
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (final BuildContext context) => SettingsMenuPage(
+                  sheetTemplateId: widget.sheetTemplateId,
+                ),
+              ),
+            ),
           ),
         ],
       ),

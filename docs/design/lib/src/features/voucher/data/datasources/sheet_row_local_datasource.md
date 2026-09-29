@@ -4,6 +4,7 @@
 |---|---|---|
 | 2026-09-25 | minamiyama | 新規作成 |
 | 2026-09-27 | minamiyama | `insert`に`payment_method`カラムを追加。`update`を追加（お名前・担当・決済方法の後からの変更に対応） |
+| 2026-09-29 | minamiyama | `findByInstanceIds`を追加（複数営業日分の一括取得、FR-3） |
 
 ## 処理概要
 
@@ -27,6 +28,8 @@ sequenceDiagram
     D->>DB: SELECT COALESCE(MAX(row_order), 0) FROM t_row WHERE sheet_instance_id = ?
     R->>D: findByInstanceId(sheetInstanceId)
     D->>DB: SELECT * FROM t_row WHERE sheet_instance_id = ?
+    R->>D: findByInstanceIds(sheetInstanceIds)
+    D->>DB: SELECT * FROM t_row WHERE sheet_instance_id IN (...)
 ```
 
 ## insert
@@ -178,3 +181,36 @@ sequenceDiagram
    SELECT * FROM t_row WHERE sheet_instance_id = :sheetInstanceId AND status = 'active' ORDER BY row_order ASC;
    ```
 2. 取得結果を[SheetRowModel.fromMap](../models/sheet_row_model.md)でそれぞれ変換し、リストとして返却する。
+
+## findByInstanceIds
+
+### 処理概要
+複数の`sheetInstanceIds`に紐づく有効な[SheetRowModel](../models/sheet_row_model.md)を`sheet_instance_id`・`row_order`昇順で一括取得する。伝票インスタンス数分ループしてDBを呼び出すことを避けるため、`IN`句による単一のSELECT文で全件を取得する（CSV期間出力、FR-3）。
+
+### input
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | バリデーション | 備考 |
+|---|---|---|---|---|---|
+| 伝票インスタンスID一覧 | sheetInstanceIds | list | string | 必須 | 空リストの場合はSQL発行前に空リストを返却する |
+
+### output
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | 備考 |
+|---|---|---|---|---|
+| 行一覧 | - | list | [SheetRowModel](../models/sheet_row_model.md) | 該当なしの場合は空リスト |
+
+### exception
+
+なし
+
+### 処理詳細
+1. 条件a: `sheetInstanceIds`が空リストの場合、空リストを返却し処理を終了する。\
+   条件b: 1件以上の場合、次のステップへ進む。
+2. `sheetInstanceIds`の件数分のプレースホルダ（`?`）を`IN`句として組み立てる（メモリ内処理、DBアクセスなし）。
+3. 以下のSQLをDBに対して1回発行する。
+   ```sql
+   SELECT * FROM t_row
+   WHERE sheet_instance_id IN (:sheetInstanceId1, :sheetInstanceId2, ...) AND status = 'active'
+   ORDER BY sheet_instance_id ASC, row_order ASC;
+   ```
+4. 取得結果を[SheetRowModel.fromMap](../models/sheet_row_model.md)でそれぞれ変換し、リストとして返却する。

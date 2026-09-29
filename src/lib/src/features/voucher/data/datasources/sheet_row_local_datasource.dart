@@ -74,4 +74,24 @@ class SheetRowLocalDataSource {
     );
     return rows.map(SheetRowModel.fromMap).toList();
   }
+
+  /// 複数の [sheetInstanceIds] に紐づく有効な行を一括取得する。
+  Future<List<SheetRowModel>> findByInstanceIds(
+    final List<String> sheetInstanceIds,
+  ) async {
+    if (sheetInstanceIds.isEmpty) {
+      return <SheetRowModel>[];
+    }
+    final String placeholders = List<String>.filled(
+      sheetInstanceIds.length,
+      '?',
+    ).join(', ');
+    final List<Map<String, Object?>> rows = await _db.rawQuery(
+      'SELECT * FROM t_row '
+      'WHERE sheet_instance_id IN ($placeholders) AND status = ? '
+      'ORDER BY sheet_instance_id ASC, row_order ASC',
+      <Object?>[...sheetInstanceIds, RecordStatus.active.dbValue],
+    );
+    return rows.map(SheetRowModel.fromMap).toList();
+  }
 }
