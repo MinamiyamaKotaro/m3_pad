@@ -70,7 +70,11 @@ class VoucherNameCell extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 8),
         child: Row(
           children: <Widget>[
-            Expanded(child: Text(customer?.name ?? '-様')),
+            Expanded(
+              child: Text(
+                customer == null ? '-様' : '${customer!.name} 様',
+              ),
+            ),
             if (customer == null)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 4),

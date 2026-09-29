@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../core/utils/currency_format.dart';
 import '../../domain/entities/daily_payment_summary.dart';
 
 /// 伝票入力画面のグリッド末尾（本日の合計行）の「合計金額」列セルとして、
@@ -29,15 +30,21 @@ class VoucherDailySummaryRow extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Text(
-              '¥${summary.totalAmount}',
+              formatYen(summary.totalAmount),
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
-            Text('現金 ¥${summary.cashAmount}', style: _smallStyle(context)),
-            Text('カード ¥${summary.cardAmount}', style: _smallStyle(context)),
             Text(
-              'PayPay ¥${summary.paypayAmount}',
+              '現金 ${formatYen(summary.cashAmount)}',
+              style: _smallStyle(context),
+            ),
+            Text(
+              'カード ${formatYen(summary.cardAmount)}',
+              style: _smallStyle(context),
+            ),
+            Text(
+              'PayPay ${formatYen(summary.paypayAmount)}',
               style: _smallStyle(context),
             ),
           ],

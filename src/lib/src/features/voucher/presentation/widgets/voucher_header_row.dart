@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../core/utils/currency_format.dart';
 import '../../domain/entities/header.dart';
 
 /// 伝票入力画面の列名・単価を固定表示するヘッダー行ウィジェット。
@@ -66,7 +67,7 @@ class VoucherHeaderRow extends StatelessWidget {
                     if (header.isPriced &&
                         unitPricesByColumnId.containsKey(header.columnId))
                       Text(
-                        '¥${unitPricesByColumnId[header.columnId]}',
+                        formatYen(unitPricesByColumnId[header.columnId]!),
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.labelSmall,
                       ),

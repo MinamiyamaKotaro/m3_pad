@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../core/utils/currency_format.dart';
 import '../../domain/entities/enums/enums.dart';
 
 /// 伝票入力画面のグリッド内で1行分の「合計金額」列セルを表すウィジェット。
@@ -48,7 +49,7 @@ class VoucherTotalCell extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text('¥$amount'),
+            Text(formatYen(amount)),
             Row(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[

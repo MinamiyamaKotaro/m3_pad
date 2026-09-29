@@ -74,10 +74,10 @@ class _VoucherSheetPageState extends ConsumerState<VoucherSheetPage> {
     );
   }
 
-  /// 営業日を「M月D日 X曜日」形式に整形する。
+  /// 営業日を「YYYY年M月D日 X曜日」形式に整形する。
   String _formatBusinessDate(final DateTime date) {
     final String weekday = _weekdayNames[date.weekday - 1];
-    return '${date.month}月${date.day}日 $weekday曜日';
+    return '${date.year}年${date.month}月${date.day}日 $weekday曜日';
   }
 
   Future<void> _pickBusinessDate(final BuildContext context) async {

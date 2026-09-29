@@ -4,6 +4,7 @@
 |---|---|---|
 | 2026-09-27 | minamiyama | 新規作成（[agents.md](../../../../../../../requried/agents.md) §2「日機能要件」を反映） |
 | 2026-09-29 | minamiyama | [VoucherSheetGrid](./voucher_sheet_grid.md)導入に伴い、責務を「合計金額」列セルの表示のみに縮小（「本日の合計」ラベル・価格列/MEMO列の空欄・「担当」列の空欄は[VoucherSheetGrid](./voucher_sheet_grid.md)側で描画するよう変更）。`headers`引数を削除 |
+| 2026-09-29 | minamiyama | 金額表示を[currency_format](../../../../core/utils/currency_format.md)の`formatYen`による3桁区切りカンマ付き表示に変更 |
 
 ## 概要
 

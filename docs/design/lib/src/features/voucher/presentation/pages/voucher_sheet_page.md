@@ -6,6 +6,7 @@
 | 2026-09-27 | minamiyama | [VoucherStaffBar](../widgets/voucher_staff_bar.md)（タイトルヘッダーと表のヘッダーの間）、[VoucherDailySummaryRow](../widgets/voucher_daily_summary_row.md)（伝票末尾の行）、[VoucherAddRowButton](../widgets/voucher_add_row_button.md)（表内・本日の合計行の一つ前の行）を追加し、行追加ボタンをFloatingActionButtonから表内へ変更（[agents.md](../../../../../../../requried/agents.md)を反映） |
 | 2026-09-29 | minamiyama | [docs/ui/wireframe](../../../../../../../ui/wireframe/app.js)を正として、表本体の描画を[VoucherSheetGrid](../widgets/voucher_sheet_grid.md)（縦横スクロール時の固定表示に対応）へ置き換え。AppBarに「寿」マーク（[VoucherStaffBar](../widgets/voucher_staff_bar.md)と同じ配色）・「MMM_001_VOUCHER」サブタイトル・営業日（月/日）表示を追加 |
 | 2026-09-29 | minamiyama | 営業日の表示をタップ可能にし、`showDatePicker`によるカレンダー選択に対応。選択した日付に応じて[VoucherSheetNotifier.load](../controllers/voucher_sheet_notifier.md#load)を再実行する。表示形式を「M月D日」から「M月D日 X曜日」（日本語の曜日名）に変更 |
+| 2026-09-29 | minamiyama | 営業日の表示形式を「M月D日 X曜日」から「YYYY年M月D日 X曜日」に変更 |
 
 ## 画面ID
 
@@ -57,7 +58,7 @@
 
 - 先頭（leading）: 紙伝票フォーマット名の丸バッジ（`CircleAvatar`、背景・文字色は`colorScheme.onPrimary`/`colorScheme.primary`でAppBarの配色と反転させる）。
 - タイトル: 「伝票入力」＋画面ID「MMM_001_VOUCHER」の2段表示。
-- アクション: 営業日（「M月D日 X曜日」形式）、CSV出力ボタン。営業日タップで`showDatePicker`（カレンダー）を表示し、選択した日付で[VoucherSheetNotifier.load](../controllers/voucher_sheet_notifier.md#load)を再実行して該当営業日の伝票を読み込み直す。CSV出力ボタン押下で[VoucherSheetNotifier.exportCsv](../controllers/voucher_sheet_notifier.md#exportcsv)を呼び出す。`isExporting=true`の間はボタンをインジケータ表示に切り替え、多重押下を防止する。
+- アクション: 営業日（「YYYY年M月D日 X曜日」形式）、CSV出力ボタン。営業日タップで`showDatePicker`（カレンダー）を表示し、選択した日付で[VoucherSheetNotifier.load](../controllers/voucher_sheet_notifier.md#load)を再実行して該当営業日の伝票を読み込み直す。CSV出力ボタン押下で[VoucherSheetNotifier.exportCsv](../controllers/voucher_sheet_notifier.md#exportcsv)を呼び出す。`isExporting=true`の間はボタンをインジケータ表示に切り替え、多重押下を防止する。
 - 配色: `AppBarTheme`（`backgroundColor`/`foregroundColor`）により、[docs/ui/wireframe](../../../../../../../ui/wireframe/style.css)の`--color-primary`/`--color-primary-contrast`と同じ配色（黒背景・オフホワイト文字）とする。
 
 ## 行追加ボタンの配置

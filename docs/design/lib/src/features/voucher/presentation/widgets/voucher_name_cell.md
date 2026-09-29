@@ -3,6 +3,7 @@
 | 新規作成・更新日 | 作成・更新者名 | 作成・更新内容 |
 |---|---|---|
 | 2026-09-29 | minamiyama | 新規作成。[VoucherSheetGrid](./voucher_sheet_grid.md)の「お名前」列固定表示対応に伴い、旧`VoucherDataRow`から「お名前」セルの表示・編集ロジックを分離 |
+| 2026-09-29 | minamiyama | `customer`が非`null`の場合に氏名のみが表示され「様」が付与されていなかったバグを修正。「{氏名} 様」（半角スペース区切り）で表示するよう修正 |
 
 ## 概要
 
@@ -29,6 +30,6 @@ classDiagram
 
 ## 表示ルール
 
-- `customer`が非`null`の場合: [Customer.name](../../domain/entities/customer.md)＋「様」を表示する。
+- `customer`が非`null`の場合: [Customer.name](../../domain/entities/customer.md)＋半角スペース＋「様」（「{氏名} 様」）を表示する。
 - `customer`が`null`の場合: 「-様」を表示し、「様」の隣に「NEW」マーク（塗りつぶし角丸のバッジ）を表示する。
 - `isEditing=true`の場合、表示の代わりにテキスト入力欄を表示する。
