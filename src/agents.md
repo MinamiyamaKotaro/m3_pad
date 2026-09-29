@@ -1,7 +1,8 @@
 # AGENTS.md (src)
 
 ## 1. 実装について
-- docs/design配下を参照して対応を行おう
+- docs/design配下を参照して対応を行うこと
+- ソース修正の場合、docs/design配下のソースも修正を行うこと
 - unit testについて `src/skills/dart-generate-test-mocks`と`src/skills/dart-add-unit-test`と`src/skills/dart-collect-coverage`配下の`SKILL.md`を参照する
 - `src/skills/dart-use-doc-examples/SKILL.md`を参照し、言語は日本語を使用して記載する
 - lintのルール以下のルールを厳守する

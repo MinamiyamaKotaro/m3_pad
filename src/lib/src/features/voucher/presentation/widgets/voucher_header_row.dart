@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../core/utils/currency_format.dart';
 import '../../domain/entities/header.dart';
 
 /// 伝票入力画面の列名・単価を固定表示するヘッダー行ウィジェット。
@@ -35,40 +36,47 @@ class VoucherHeaderRow extends StatelessWidget {
   }
 
   @override
-  Widget build(final BuildContext context) => DecoratedBox(
-        decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface),
-        child: Row(
-          children: headers
-              .map(
-                (final Header header) => Container(
-                  width: 96,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 8,
-                  ),
-                  decoration: const BoxDecoration(
-                    border: Border(right: BorderSide()),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      Text(
-                        header.name,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.labelMedium,
-                      ),
-                      if (header.isPriced &&
-                          unitPricesByColumnId.containsKey(header.columnId))
-                        Text(
-                          '¥${unitPricesByColumnId[header.columnId]}',
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.labelSmall,
-                        ),
-                    ],
+  Widget build(final BuildContext context) {
+    final Color outline = Theme.of(context).colorScheme.outline;
+    return DecoratedBox(
+      decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: headers
+            .map(
+              (final Header header) => Container(
+                width: 96,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 6,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  border: Border(
+                    right: BorderSide(color: outline),
+                    bottom: BorderSide(color: outline),
                   ),
                 ),
-              )
-              .toList(),
-        ),
-      );
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Text(
+                      header.name,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.labelMedium,
+                    ),
+                    if (header.isPriced &&
+                        unitPricesByColumnId.containsKey(header.columnId))
+                      Text(
+                        formatYen(unitPricesByColumnId[header.columnId]!),
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.labelSmall,
+                      ),
+                  ],
+                ),
+              ),
+            )
+            .toList(),
+      ),
+    );
+  }
 }

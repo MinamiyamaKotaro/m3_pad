@@ -4,12 +4,11 @@ import 'package:flutter/material.dart';
 import '../../domain/entities/header.dart';
 import '../../domain/entities/sheet_cell.dart';
 
-/// VoucherDataRow内の1セル分の入力ウィジェット。
+/// 伝票入力画面のグリッド内で1セル分の入力を表すウィジェット。
 ///
-/// 列（[Header]）の`isPriced`に応じて、数量入力（数値キーボード）または
-/// テキスト入力を切り替える。非編集時は保存済みの[SheetCell]の表示値
-/// （`isPriced=true`の場合は`quantity`、`false`の場合は`content`）を表示
-/// する。
+/// 列（[Header]）の`isPriced=true`（MEMO以外）の場合は数量の増減ボタン
+/// （スピンボタン）、`false`（MEMO列）の場合はタップして編集するテキスト
+/// 入力を表示する。
 class VoucherCellField extends StatelessWidget {
   /// [VoucherCellField] を生成する。
   const VoucherCellField({
@@ -61,6 +60,10 @@ class VoucherCellField extends StatelessWidget {
 
   @override
   Widget build(final BuildContext context) {
+    if (header.isPriced) {
+      return _buildStepper(context);
+    }
+
     if (isEditing) {
       return TextField(
         autofocus: true,
@@ -68,9 +71,6 @@ class VoucherCellField extends StatelessWidget {
           ..selection = TextSelection.collapsed(
             offset: (editingText ?? '').length,
           ),
-        keyboardType:
-            header.isPriced ? TextInputType.number : TextInputType.text,
-        textAlign: header.isPriced ? TextAlign.right : TextAlign.left,
         onChanged: onChanged,
         onSubmitted: (final String _) => onSubmitted(),
         decoration: const InputDecoration(
@@ -80,23 +80,77 @@ class VoucherCellField extends StatelessWidget {
       );
     }
 
-    final String displayValue = header.isPriced
-        ? (cell?.quantity?.toString() ?? '')
-        : (cell?.content ?? '');
-
+    final String displayValue = cell?.content ?? '';
+    final TextStyle? baseStyle = Theme.of(context).textTheme.bodyMedium;
     return InkWell(
       onTap: onTap,
       child: Container(
-        alignment:
-            header.isPriced ? Alignment.centerRight : Alignment.centerLeft,
+        alignment: Alignment.centerLeft,
         padding: const EdgeInsets.symmetric(horizontal: 8),
         child: Text(
           displayValue.isEmpty ? '–' : displayValue,
           style: displayValue.isEmpty
-              ? TextStyle(color: Theme.of(context).disabledColor)
-              : null,
+              ? baseStyle?.copyWith(color: Theme.of(context).disabledColor)
+              : baseStyle,
         ),
       ),
     );
+  }
+
+  /// 数量の増減ボタン（スピンボタン）を表示する。`isPriced=true`の列
+  /// （MEMO以外）でのみ使用する。96px幅のセルに収まるよう、ボタンは
+  /// [IconButton]（既定でも48px四方のタップ領域を確保しようとする）では
+  /// なく固定サイズの[InkWell]で実装する。
+  Widget _buildStepper(final BuildContext context) {
+    final int quantity = cell?.quantity ?? 0;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: <Widget>[
+        _stepperButton(
+          context,
+          icon: Icons.remove,
+          onPressed: quantity > 0 ? () => _updateQuantity(quantity - 1) : null,
+        ),
+        SizedBox(
+          width: 18,
+          child: Text(
+            '$quantity',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.labelSmall,
+          ),
+        ),
+        _stepperButton(
+          context,
+          icon: Icons.add,
+          onPressed: () => _updateQuantity(quantity + 1),
+        ),
+      ],
+    );
+  }
+
+  Widget _stepperButton(
+    final BuildContext context, {
+    required final IconData icon,
+    required final VoidCallback? onPressed,
+  }) {
+    final Color color = onPressed == null
+        ? Theme.of(context).disabledColor
+        : Theme.of(context).colorScheme.primary;
+    return SizedBox(
+      width: 18,
+      height: 18,
+      child: InkWell(
+        onTap: onPressed,
+        child: Icon(icon, size: 12, color: color),
+      ),
+    );
+  }
+
+  /// タップ→値変更→確定の順にコールバックを呼び出し、数量を[next]に
+  /// 更新する。
+  void _updateQuantity(final int next) {
+    onTap();
+    onChanged(next.toString());
+    onSubmitted();
   }
 }

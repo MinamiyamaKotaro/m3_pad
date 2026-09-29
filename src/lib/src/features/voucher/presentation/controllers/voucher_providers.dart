@@ -292,5 +292,7 @@ final Provider<ExportDailySheetToCsvUsecase>
     headerRepository: ref.watch(headerRepositoryProvider),
     rowRepository: ref.watch(sheetRowRepositoryProvider),
     cellRepository: ref.watch(sheetCellRepositoryProvider),
+    customerRepository: ref.watch(customerRepositoryProvider),
+    staffRepository: ref.watch(staffRepositoryProvider),
   ),
 );

@@ -7,18 +7,12 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/widgets/loading_indicator.dart';
 import '../../../../core/widgets/notice_banner.dart';
-import '../../domain/entities/enums/enums.dart';
-import '../../domain/entities/sheet_cell.dart';
 import '../../domain/entities/sheet_detail.dart';
-import '../../domain/entities/sheet_row.dart';
 import '../controllers/voucher_sheet_effect.dart';
 import '../controllers/voucher_sheet_effect_provider.dart';
 import '../controllers/voucher_sheet_notifier.dart';
 import '../controllers/voucher_sheet_state.dart';
-import '../widgets/voucher_add_row_button.dart';
-import '../widgets/voucher_daily_summary_row.dart';
-import '../widgets/voucher_data_row.dart';
-import '../widgets/voucher_header_row.dart';
+import '../widgets/voucher_sheet_grid.dart';
 import '../widgets/voucher_staff_bar.dart';
 
 /// 伝票入力画面（画面ID: `MMM_001_VOUCHER`）。
@@ -53,17 +47,55 @@ class VoucherSheetPage extends ConsumerStatefulWidget {
 }
 
 class _VoucherSheetPageState extends ConsumerState<VoucherSheetPage> {
+  static const List<String> _weekdayNames = <String>[
+    '月',
+    '火',
+    '水',
+    '木',
+    '金',
+    '土',
+    '日',
+  ];
+
+  /// 表示中の営業日。カレンダーでの選択に応じて更新する。
+  late DateTime _businessDate;
+
   @override
   void initState() {
     super.initState();
+    _businessDate = widget.businessDate;
     unawaited(
       Future<void>.microtask(
         () => ref.read(voucherSheetNotifierProvider.notifier).load(
               sheetTemplateId: widget.sheetTemplateId,
-              businessDate: widget.businessDate,
+              businessDate: _businessDate,
             ),
       ),
     );
+  }
+
+  /// 営業日を「YYYY年M月D日 X曜日」形式に整形する。
+  String _formatBusinessDate(final DateTime date) {
+    final String weekday = _weekdayNames[date.weekday - 1];
+    return '${date.year}年${date.month}月${date.day}日 $weekday曜日';
+  }
+
+  Future<void> _pickBusinessDate(final BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _businessDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2100),
+    );
+    if (picked == null || !mounted) {
+      return;
+    }
+    setState(() {
+      _businessDate = picked;
+    });
+    await ref
+        .read(voucherSheetNotifierProvider.notifier)
+        .load(sheetTemplateId: widget.sheetTemplateId, businessDate: picked);
   }
 
   @override
@@ -101,8 +133,30 @@ class _VoucherSheetPageState extends ConsumerState<VoucherSheetPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('伝票入力'),
+        leading: Padding(
+          padding: const EdgeInsets.all(8),
+          child: CircleAvatar(
+            backgroundColor: Theme.of(context).colorScheme.onPrimary,
+            foregroundColor: Theme.of(context).colorScheme.primary,
+            child: const Text('寿'),
+          ),
+        ),
+        title: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text('伝票入力'),
+            Text('MMM_001_VOUCHER', style: TextStyle(fontSize: 11)),
+          ],
+        ),
         actions: <Widget>[
+          InkWell(
+            onTap: () => _pickBusinessDate(context),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Center(child: Text(_formatBusinessDate(_businessDate))),
+            ),
+          ),
           IconButton(
             icon: state.isExporting
                 ? const SizedBox(
@@ -140,7 +194,7 @@ class _VoucherSheetPageState extends ConsumerState<VoucherSheetPage> {
               ElevatedButton(
                 onPressed: () => notifier.retry(
                   sheetTemplateId: widget.sheetTemplateId,
-                  businessDate: widget.businessDate,
+                  businessDate: _businessDate,
                 ),
                 child: const Text('再試行'),
               ),
@@ -176,58 +230,23 @@ class _VoucherSheetPageState extends ConsumerState<VoucherSheetPage> {
               onDrinkBackCommit: notifier.setStaffShiftDrinkBack,
             ),
             Expanded(
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      VoucherHeaderRow(
-                        headers: detail.headers,
-                        unitPricesByColumnId: detail.unitPricesByColumnId,
-                      ),
-                      ...detail.rows.map(
-                        (final SheetRow row) => VoucherDataRow(
-                          row: row,
-                          headers: detail.headers,
-                          cellsByColumnId:
-                              detail.cellsByRowIdAndColumnId[row.rowId] ??
-                                  const <String, SheetCell>{},
-                          staffRoster: detail.staffRoster,
-                          customersById: detail.customersById,
-                          editingColumnId: state.editingRowId == row.rowId
-                              ? state.editingColumnId
-                              : null,
-                          editingText: state.editingRowId == row.rowId
-                              ? state.editingText
-                              : null,
-                          onCellTap:
-                              (final String columnId, final String text) =>
-                                  notifier.startEditingCell(
-                            row.rowId,
-                            columnId,
-                            text,
-                          ),
-                          onTextChanged: notifier.updateEditingText,
-                          onCommit: notifier.commitCell,
-                          onStaffChanged: (final String? staffId) =>
-                              notifier.setRowStaff(row.rowId, staffId),
-                          onPaymentMethodChanged:
-                              (final PaymentMethod? method) => notifier
-                                  .setRowPaymentMethod(row.rowId, method),
-                        ),
-                      ),
-                      VoucherAddRowButton(
-                        columnCount: detail.headers.length + 3,
-                        onTap: notifier.addRow,
-                      ),
-                      VoucherDailySummaryRow(
-                        summary: detail.dailySummary,
-                        headers: detail.headers,
-                      ),
-                    ],
-                  ),
-                ),
+              child: VoucherSheetGrid(
+                headers: detail.headers,
+                unitPricesByColumnId: detail.unitPricesByColumnId,
+                rows: detail.rows,
+                cellsByRowIdAndColumnId: detail.cellsByRowIdAndColumnId,
+                staffRoster: detail.staffRoster,
+                customersById: detail.customersById,
+                dailySummary: detail.dailySummary,
+                editingRowId: state.editingRowId,
+                editingColumnId: state.editingColumnId,
+                editingText: state.editingText,
+                onCellTap: notifier.startEditingCell,
+                onTextChanged: notifier.updateEditingText,
+                onCommit: notifier.commitCell,
+                onStaffChanged: notifier.setRowStaff,
+                onPaymentMethodChanged: notifier.setRowPaymentMethod,
+                onAddRow: notifier.addRow,
               ),
             ),
           ],

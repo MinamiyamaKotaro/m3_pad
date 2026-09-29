@@ -4,6 +4,7 @@
 |---|---|---|
 | 2026-09-25 | minamiyama | 新規作成 |
 | 2026-09-27 | minamiyama | お名前の更新を[commitCell](#commitcell)に統合し、担当・決済方法の更新（[setRowStaff](#setrowstaff)・[setRowPaymentMethod](#setrowpaymentmethod)）、スタッフ欄の更新（[setStaffShiftName](#setstaffshiftname)・[startEditingStaffShiftTime](#starteditingstaffshifttime)・[commitStaffShiftTime](#commitstaffshifttime)・[setStaffShiftDrinkBack](#setstaffshiftdrinkback)）を追加（[agents.md](../../../../../../../requried/agents.md)を反映） |
+| 2026-09-29 | minamiyama | [VoucherSheetGrid](../widgets/voucher_sheet_grid.md)導入に伴う呼び出し元の変更（旧`VoucherDataRow`→[VoucherNameCell](../widgets/voucher_name_cell.md)・[VoucherTotalCell](../widgets/voucher_total_cell.md)）を反映してリンクを更新（処理内容自体に変更はない） |
 
 ## 処理概要
 
@@ -209,7 +210,7 @@ Error状態からの再試行。[load](#load)を再実行する。
 ## commitCell
 
 ### 処理概要
-編集中セルの入力を確定し保存する。`editingColumnId`が実在の列IDの場合は[InputCellUsecase](../../domain/usecases/input_cell_usecase.md)へ、特別な値`'customerName'`（「お名前」列。[VoucherDataRow](../widgets/voucher_data_row.md)が`onCellTap`にこの値を渡す）の場合は[UpdateRowUsecase](../../domain/usecases/update_row_usecase.md)へ保存する。列の価格対象フラグに応じて`content`または`quantity`のいずれかとして送信する。
+編集中セルの入力を確定し保存する。`editingColumnId`が実在の列IDの場合は[InputCellUsecase](../../domain/usecases/input_cell_usecase.md)へ、特別な値`'customerName'`（「お名前」列。[VoucherNameCell](../widgets/voucher_name_cell.md)が`onCellTap`にこの値を渡す）の場合は[UpdateRowUsecase](../../domain/usecases/update_row_usecase.md)へ保存する。列の価格対象フラグに応じて`content`または`quantity`のいずれかとして送信する。
 
 ### input
 
@@ -280,7 +281,7 @@ Error状態からの再試行。[load](#load)を再実行する。
 ## setRowPaymentMethod
 
 ### 処理概要
-「合計金額」列に隣接する「P」「カ」トグルのタップ時に呼び出され、[UpdateRowUsecase](../../domain/usecases/update_row_usecase.md)で行の決済方法を更新する。同じ決済方法を再度タップした場合は現金（`null`）に戻す判定は、本メソッドを呼び出す側（[VoucherDataRow](../widgets/voucher_data_row.md)）が現在値と比較して行う。
+「合計金額」列に隣接する「P」「カ」トグルのタップ時に呼び出され、[UpdateRowUsecase](../../domain/usecases/update_row_usecase.md)で行の決済方法を更新する。同じ決済方法を再度タップした場合は現金（`null`）に戻す判定は、本メソッドを呼び出す側（[VoucherTotalCell](../widgets/voucher_total_cell.md)）が現在値と比較して行う。
 
 ### input
 
