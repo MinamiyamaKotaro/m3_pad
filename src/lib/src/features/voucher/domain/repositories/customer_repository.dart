@@ -10,4 +10,7 @@ abstract interface class CustomerRepository {
 
   /// 複数の [customerIds] に紐づく顧客を一括取得する。
   Future<List<Customer>> findByIds(final List<String> customerIds);
+
+  /// [name] に一致する有効な顧客を1件取得する。存在しない場合は`null`。
+  Future<Customer?> findByName(final String name);
 }

@@ -89,6 +89,16 @@ class MockStaffRepository extends _i1.Mock implements _i3.StaffRepository {
       ) as _i4.Future<List<_i2.Staff>>);
 
   @override
+  _i4.Future<_i2.Staff?> findByName(String? name) => (super.noSuchMethod(
+        Invocation.method(
+          #findByName,
+          [name],
+        ),
+        returnValue: _i4.Future<_i2.Staff?>.value(),
+        returnValueForMissingStub: _i4.Future<_i2.Staff?>.value(),
+      ) as _i4.Future<_i2.Staff?>);
+
+  @override
   _i4.Future<void> updateName(
     String? staffId,
     String? name,

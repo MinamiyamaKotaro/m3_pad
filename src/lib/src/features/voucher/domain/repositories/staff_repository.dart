@@ -12,6 +12,11 @@ abstract interface class StaffRepository {
   /// 有効なスタッフ一覧を取得する。
   Future<List<Staff>> findAllActive();
 
+  /// [name] に一致するスタッフを1件取得する。論理削除済みも含めて検索する
+  /// （同名の論理削除済みスタッフを復元するために使用）。存在しない場合は
+  /// `null`。
+  Future<Staff?> findByName(final String name);
+
   /// [staffId] の氏名を[name]に更新する。
   Future<void> updateName(final String staffId, final String name);
 

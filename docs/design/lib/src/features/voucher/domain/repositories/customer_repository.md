@@ -4,6 +4,7 @@
 |---|---|---|
 | 2026-09-25 | minamiyama | 新規作成（domain層インターフェースとして定義） |
 | 2026-09-27 | minamiyama | `insert`を追加（お名前欄への入力による新規顧客の作成に対応、[UpdateRowUsecase](../usecases/update_row_usecase.md)参照）。`findByIds`を追加（[SheetDetail.customersById](../entities/sheet_detail.md)の一括取得用） |
+| 2026-09-29 | minamiyama | `findByName`を追加（同名の既存顧客との重複作成を避けるための名前検索、[UpdateRowUsecase](../usecases/update_row_usecase.md)参照） |
 
 ## 概要
 
@@ -78,3 +79,25 @@
 | exception論理名 | exception物理名 | エラーコード | エラーメッセージ | 備考 |
 |---|---|---|---|---|
 | レコード未検出 | [RecordNotFoundException](../../../../core/errors/record_not_found_exception.md) | - | - | `entityName="Customer"`, `id=customerId` |
+
+### findByName
+
+| 項目 | 内容 |
+|---|---|
+| シグネチャ | `Future<Customer?> findByName(String name)` |
+
+#### input
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | バリデーション | 備考 |
+|---|---|---|---|---|---|
+| 氏名 | name | - | string | 必須 | 完全一致で検索する |
+
+#### output
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | 備考 |
+|---|---|---|---|---|
+| 顧客 | - | optional | [Customer](../entities/customer.md) | 該当する有効な顧客が存在しない場合は`null` |
+
+#### exception
+
+なし

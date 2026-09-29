@@ -188,6 +188,16 @@ class MockCustomerRepository extends _i1.Mock
         returnValueForMissingStub:
             _i5.Future<List<_i3.Customer>>.value(<_i3.Customer>[]),
       ) as _i5.Future<List<_i3.Customer>>);
+
+  @override
+  _i5.Future<_i3.Customer?> findByName(String? name) => (super.noSuchMethod(
+        Invocation.method(
+          #findByName,
+          [name],
+        ),
+        returnValue: _i5.Future<_i3.Customer?>.value(),
+        returnValueForMissingStub: _i5.Future<_i3.Customer?>.value(),
+      ) as _i5.Future<_i3.Customer?>);
 }
 
 /// A class which mocks [IdGenerator].

@@ -38,6 +38,12 @@ class StaffRepositoryImpl implements StaffRepository {
   }
 
   @override
+  Future<Staff?> findByName(final String name) async {
+    final Staff? result = await _dataSource.findByName(name);
+    return result;
+  }
+
+  @override
   Future<void> updateName(final String staffId, final String name) async {
     await _dataSource.updateName(staffId, name);
   }

@@ -4,6 +4,7 @@
 |---|---|---|
 | 2026-09-25 | minamiyama | 新規作成 |
 | 2026-09-27 | minamiyama | `insert`を追加（お名前欄への入力による新規顧客の作成に対応）。`findByIds`を追加（[SheetDetail.customersById](../../domain/entities/sheet_detail.md)の一括取得用） |
+| 2026-09-29 | minamiyama | `findByName`を追加（同名の既存顧客との重複作成を避けるための名前検索） |
 
 ## 処理概要
 
@@ -109,5 +110,35 @@ sequenceDiagram
    SELECT * FROM m_customer WHERE customer_id = :customerId AND status = 'active';
    ```
    条件a: 取得結果が0件の場合、`RecordNotFoundException`を送出し処理を終了する。\
+   条件b: 取得結果が1件の場合、次のステップへ進む。
+2. 取得した1件を[CustomerModel.fromMap](../models/customer_model.md)で変換して返却する。
+
+## findByName
+
+### 処理概要
+`name`に完全一致する有効な[CustomerModel](../models/customer_model.md)を1件取得する。未検出時は例外ではなく`null`を返す（同名の既存顧客と重複作成しないよう、呼び出し元が事前に存在確認するために使用する）。
+
+### input
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | バリデーション | 備考 |
+|---|---|---|---|---|---|
+| 氏名 | name | - | string | 必須 | - |
+
+### output
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | 備考 |
+|---|---|---|---|---|
+| 顧客 | - | optional | [CustomerModel](../models/customer_model.md) | 該当なしの場合は`null` |
+
+### exception
+
+なし
+
+### 処理詳細
+1. 以下のSQLをDBに対して1回発行する（`LIMIT 1`）。
+   ```sql
+   SELECT * FROM m_customer WHERE name = :name AND status = 'active' LIMIT 1;
+   ```
+   条件a: 取得結果が0件の場合、`null`を返却し処理を終了する。\
    条件b: 取得結果が1件の場合、次のステップへ進む。
 2. 取得した1件を[CustomerModel.fromMap](../models/customer_model.md)で変換して返却する。

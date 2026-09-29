@@ -4,6 +4,7 @@
 |---|---|---|
 | 2026-09-25 | minamiyama | 新規作成 |
 | 2026-09-29 | minamiyama | `insert`・`updateName`・`updateStatus`を追加（FR-7） |
+| 2026-09-29 | minamiyama | `findByName`を追加（過去に論理削除した同名スタッフの復元用） |
 
 ## 処理概要
 
@@ -23,6 +24,8 @@ sequenceDiagram
     D->>DB: SELECT * FROM m_staff WHERE staff_id = ?
     R->>D: findAllActive()
     D->>DB: SELECT * FROM m_staff WHERE status = 'active'
+    R->>D: findByName(name)
+    D->>DB: SELECT * FROM m_staff WHERE name = ?
     R->>D: updateName(staffId, name)
     D->>DB: UPDATE m_staff SET name = ? WHERE staff_id = ?
     R->>D: updateStatus(staffId, status)
@@ -114,6 +117,36 @@ sequenceDiagram
    SELECT * FROM m_staff WHERE status = 'active' ORDER BY name ASC;
    ```
 2. 取得結果を[StaffModel.fromMap](../models/staff_model.md)でそれぞれ変換し、リストとして返却する。
+
+## findByName
+
+### 処理概要
+`name`に完全一致するスタッフを1件取得する。論理削除済みも含めて検索する（同名の論理削除済みスタッフを復元するために使用する）。未検出時は例外ではなく`null`を返す。
+
+### input
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | バリデーション | 備考 |
+|---|---|---|---|---|---|
+| 氏名 | name | - | string | 必須 | - |
+
+### output
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | 備考 |
+|---|---|---|---|---|
+| スタッフ | - | optional | [StaffModel](../models/staff_model.md) | 該当なしの場合は`null` |
+
+### exception
+
+なし
+
+### 処理詳細
+1. 以下のSQLをDBに対して1回発行する（`LIMIT 1`、`status`条件なし）。
+   ```sql
+   SELECT * FROM m_staff WHERE name = :name LIMIT 1;
+   ```
+   条件a: 取得結果が0件の場合、`null`を返却し処理を終了する。\
+   条件b: 取得結果が1件の場合、次のステップへ進む。
+2. 取得した1件を[StaffModel.fromMap](../models/staff_model.md)で変換して返却する。
 
 ## updateName
 

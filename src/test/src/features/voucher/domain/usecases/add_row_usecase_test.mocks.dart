@@ -118,6 +118,16 @@ class MockCustomerRepository extends _i1.Mock
         returnValueForMissingStub:
             _i6.Future<List<_i2.Customer>>.value(<_i2.Customer>[]),
       ) as _i6.Future<List<_i2.Customer>>);
+
+  @override
+  _i6.Future<_i2.Customer?> findByName(String? name) => (super.noSuchMethod(
+        Invocation.method(
+          #findByName,
+          [name],
+        ),
+        returnValue: _i6.Future<_i2.Customer?>.value(),
+        returnValueForMissingStub: _i6.Future<_i2.Customer?>.value(),
+      ) as _i6.Future<_i2.Customer?>);
 }
 
 /// A class which mocks [StaffRepository].
@@ -166,6 +176,16 @@ class MockStaffRepository extends _i1.Mock implements _i7.StaffRepository {
         returnValueForMissingStub:
             _i6.Future<List<_i3.Staff>>.value(<_i3.Staff>[]),
       ) as _i6.Future<List<_i3.Staff>>);
+
+  @override
+  _i6.Future<_i3.Staff?> findByName(String? name) => (super.noSuchMethod(
+        Invocation.method(
+          #findByName,
+          [name],
+        ),
+        returnValue: _i6.Future<_i3.Staff?>.value(),
+        returnValueForMissingStub: _i6.Future<_i3.Staff?>.value(),
+      ) as _i6.Future<_i3.Staff?>);
 
   @override
   _i6.Future<void> updateName(

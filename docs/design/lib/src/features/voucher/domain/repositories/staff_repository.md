@@ -4,6 +4,7 @@
 |---|---|---|
 | 2026-09-25 | minamiyama | 新規作成（domain層インターフェースとして定義） |
 | 2026-09-29 | minamiyama | `insert`・`updateName`・`updateStatus`を追加（スタッフ管理機能、FR-7） |
+| 2026-09-29 | minamiyama | `findByName`を追加（過去に論理削除した同名スタッフの復元用、[AddStaffUsecase](../usecases/add_staff_usecase.md)参照） |
 
 ## 概要
 
@@ -72,6 +73,28 @@
 | 項目論理名 | 項目物理名 | カプセルの型 | データ型 | 備考 |
 |---|---|---|---|---|
 | スタッフ一覧 | - | list | [Staff](../entities/staff.md) | 該当なしの場合は空リスト |
+
+#### exception
+
+なし
+
+### findByName
+
+| 項目 | 内容 |
+|---|---|
+| シグネチャ | `Future<Staff?> findByName(String name)` |
+
+#### input
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | バリデーション | 備考 |
+|---|---|---|---|---|---|
+| 氏名 | name | - | string | 必須 | 完全一致で検索する |
+
+#### output
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | 備考 |
+|---|---|---|---|---|
+| スタッフ | - | optional | [Staff](../entities/staff.md) | 論理削除済みも含めて検索する（同名の論理削除済みスタッフを復元するため）。該当なしの場合は`null` |
 
 #### exception
 

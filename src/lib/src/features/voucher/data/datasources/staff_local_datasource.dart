@@ -39,6 +39,21 @@ class StaffLocalDataSource {
     return rows.map(StaffModel.fromMap).toList();
   }
 
+  /// [name] に一致するスタッフを1件取得する。論理削除済みも含めて検索する。
+  /// 存在しない場合は`null`。
+  Future<StaffModel?> findByName(final String name) async {
+    final List<Map<String, Object?>> rows = await _db.query(
+      'm_staff',
+      where: 'name = ?',
+      whereArgs: <Object?>[name],
+      limit: 1,
+    );
+    if (rows.isEmpty) {
+      return null;
+    }
+    return StaffModel.fromMap(rows.first);
+  }
+
   /// [staffId] の氏名を[name]に更新する。
   Future<void> updateName(final String staffId, final String name) async {
     final int affected = await _db.update(

@@ -47,4 +47,18 @@ class CustomerLocalDataSource {
     );
     return rows.map(CustomerModel.fromMap).toList();
   }
+
+  /// [name] に一致する有効な顧客を1件取得する。存在しない場合は`null`。
+  Future<CustomerModel?> findByName(final String name) async {
+    final List<Map<String, Object?>> rows = await _db.query(
+      'm_customer',
+      where: 'name = ? AND status = ?',
+      whereArgs: <Object?>[name, RecordStatus.active.dbValue],
+      limit: 1,
+    );
+    if (rows.isEmpty) {
+      return null;
+    }
+    return CustomerModel.fromMap(rows.first);
+  }
 }

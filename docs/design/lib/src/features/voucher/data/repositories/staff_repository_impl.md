@@ -4,6 +4,7 @@
 |---|---|---|
 | 2026-09-25 | minamiyama | 新規作成 |
 | 2026-09-29 | minamiyama | `insert`・`updateName`・`updateStatus`を追加（FR-7） |
+| 2026-09-29 | minamiyama | `findByName`を追加 |
 
 ## 処理概要
 
@@ -23,6 +24,8 @@ sequenceDiagram
     Impl->>D: findById(staffId)
     U->>Impl: findAllActive()
     Impl->>D: findAllActive()
+    U->>Impl: findByName(name)
+    Impl->>D: findByName(name)
     U->>Impl: updateName(staffId, name)
     Impl->>D: updateName(staffId, name)
     U->>Impl: updateStatus(staffId, status)
@@ -100,6 +103,30 @@ sequenceDiagram
 
 ### 処理詳細
 1. [StaffLocalDataSource.findAllActive](../datasources/staff_local_datasource.md)を呼び出し、結果をそのまま返却する。
+
+## findByName
+
+### 処理概要
+[StaffLocalDataSource.findByName](../datasources/staff_local_datasource.md)に処理を委譲する。
+
+### input
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | バリデーション | 備考 |
+|---|---|---|---|---|---|
+| 氏名 | name | - | string | 必須 | - |
+
+### output
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | 備考 |
+|---|---|---|---|---|
+| スタッフ | - | optional | [Staff](../../domain/entities/staff.md) | 該当なしの場合は`null`。実体は[StaffModel](../models/staff_model.md) |
+
+### exception
+
+なし
+
+### 処理詳細
+1. [StaffLocalDataSource.findByName](../datasources/staff_local_datasource.md)を呼び出し、結果をそのまま返却する。
 
 ## updateName
 

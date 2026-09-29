@@ -35,4 +35,10 @@ class CustomerRepositoryImpl implements CustomerRepository {
     final List<Customer> result = await _dataSource.findByIds(customerIds);
     return result;
   }
+
+  @override
+  Future<Customer?> findByName(final String name) async {
+    final Customer? result = await _dataSource.findByName(name);
+    return result;
+  }
 }
