@@ -41,7 +41,11 @@ class VoucherStaffSelectCell extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 4),
         child: DropdownButtonHideUnderline(
           child: DropdownButton<String?>(
-            value: staffId,
+            // 一覧にない（論理削除済みの）スタッフは「未定」として表示する。
+            value:
+                staffRoster.any((final Staff staff) => staff.staffId == staffId)
+                    ? staffId
+                    : null,
             isDense: true,
             isExpanded: true,
             hint: const Text('未定'),

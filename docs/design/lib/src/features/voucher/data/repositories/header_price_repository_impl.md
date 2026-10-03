@@ -3,6 +3,7 @@
 | 新規作成・更新日 | 作成・更新者名 | 作成・更新内容 |
 |---|---|---|
 | 2026-09-25 | minamiyama | 新規作成 |
+| 2026-10-03 | minamiyama | CSV出力の同額グルーピングのため、複数列の単価を一括取得する`findCurrentPrices`を追加 |
 
 ## 処理概要
 
@@ -20,6 +21,8 @@ sequenceDiagram
     Impl->>D: insert(HeaderPriceModel化)
     U->>Impl: findCurrentPrice(columnId, targetDate)
     Impl->>D: findCurrentPrice(columnId, targetDate)
+    U->>Impl: findCurrentPrices(columnIds, targetDate)
+    Impl->>D: findCurrentPrices(columnIds, targetDate)
     U->>Impl: closeCurrentPrice(priceId, effectiveTo)
     Impl->>D: closeCurrentPrice(priceId, effectiveTo)
 ```
@@ -74,6 +77,31 @@ sequenceDiagram
 
 ### 処理詳細
 1. [HeaderPriceLocalDataSource.findCurrentPrice](../datasources/header_price_local_datasource.md)を呼び出し、結果をそのまま返却する。
+
+## findCurrentPrices
+
+### 処理概要
+[HeaderPriceLocalDataSource.findCurrentPrices](../datasources/header_price_local_datasource.md#findcurrentprices)に処理を委譲する。
+
+### input
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | バリデーション | 備考 |
+|---|---|---|---|---|---|
+| 列ID一覧 | columnIds | list | string | 必須 | 空の場合は空リストを返す |
+| 対象日 | targetDate | - | DateTime | 必須, 日付のみ | - |
+
+### output
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | 備考 |
+|---|---|---|---|---|
+| 単価改定履歴一覧 | - | list | [HeaderPrice](../../domain/entities/header_price.md) | 実体は[HeaderPriceModel](../models/header_price_model.md) |
+
+### exception
+
+なし
+
+### 処理詳細
+1. [HeaderPriceLocalDataSource.findCurrentPrices](../datasources/header_price_local_datasource.md#findcurrentprices)を呼び出し、結果をそのまま返却する。
 
 ## closeCurrentPrice
 

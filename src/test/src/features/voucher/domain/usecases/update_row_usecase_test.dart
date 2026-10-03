@@ -46,8 +46,11 @@ void main() {
     });
 
     test(
-      'creates a new customer and links it when the row has no customer yet',
+      'creates a new customer and links it when no customer with that name '
+      'exists yet',
       () async {
+        when(customerRepository.findByName('田中'))
+            .thenAnswer((final _) async => null);
         when(idGenerator.generate()).thenReturn('customer-1');
 
         final SheetRow updated = await usecase(current, customerName: '田中');
@@ -58,6 +61,28 @@ void main() {
             .single as Customer;
         expect(inserted.name, '田中');
         verify(rowRepository.update(updated)).called(1);
+      },
+    );
+
+    test(
+      'links to an existing customer with the same name instead of creating '
+      'a duplicate',
+      () async {
+        final Customer existing = Customer(
+          customerId: 'customer-existing',
+          name: '田中',
+          gender: Gender.none,
+          status: RecordStatus.active,
+          createdAt: now,
+          updatedAt: now,
+        );
+        when(customerRepository.findByName('田中'))
+            .thenAnswer((final _) async => existing);
+
+        final SheetRow updated = await usecase(current, customerName: '田中');
+
+        expect(updated.customerId, 'customer-existing');
+        verifyNever(customerRepository.insert(any));
       },
     );
 

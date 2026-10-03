@@ -3,6 +3,7 @@
 | 新規作成・更新日 | 作成・更新者名 | 作成・更新内容 |
 |---|---|---|
 | 2026-09-25 | minamiyama | 新規作成 |
+| 2026-09-29 | minamiyama | `findByTemplateIdAndDateRange`を追加（CSV期間出力、FR-3） |
 
 ## 処理概要
 
@@ -22,6 +23,8 @@ sequenceDiagram
     D->>DB: SELECT * FROM t_sheet_instance WHERE sheet_instance_id = ?
     R->>D: findByTemplateAndDate(sheetTemplateId, businessDate)
     D->>DB: SELECT * FROM t_sheet_instance WHERE sheet_template_id = ? AND business_date = ?
+    R->>D: findByTemplateIdAndDateRange(sheetTemplateId, from, to)
+    D->>DB: SELECT * FROM t_sheet_instance WHERE sheet_template_id = ? AND business_date BETWEEN ? AND ?
 ```
 
 ## insert
@@ -115,3 +118,37 @@ sequenceDiagram
    条件a: 取得結果が0件の場合、`null`を返却し処理を終了する。\
    条件b: 取得結果が1件の場合、次のステップへ進む。
 2. 取得した1件を[SheetInstanceModel.fromMap](../models/sheet_instance_model.md)で変換して返却する。
+
+## findByTemplateIdAndDateRange
+
+### 処理概要
+`sheetTemplateId`に紐づき、`from`〜`to`（両端含む）の営業日を持つ有効な[SheetInstanceModel](../models/sheet_instance_model.md)一覧を`business_date`昇順で取得する。
+
+### input
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | バリデーション | 備考 |
+|---|---|---|---|---|---|
+| 伝票フォーマットID | sheetTemplateId | - | string | 必須 | - |
+| 開始日 | from | - | DateTime | 必須, 日付のみ | - |
+| 終了日 | to | - | DateTime | 必須, 日付のみ | - |
+
+### output
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | 備考 |
+|---|---|---|---|---|
+| 伝票インスタンス一覧 | - | list | [SheetInstanceModel](../models/sheet_instance_model.md) | `business_date`昇順。該当なしの場合は空リスト |
+
+### exception
+
+なし
+
+### 処理詳細
+1. 以下のSQLをDBに対して1回発行する。
+   ```sql
+   SELECT * FROM t_sheet_instance
+   WHERE sheet_template_id = :sheetTemplateId
+     AND business_date BETWEEN :from AND :to
+     AND status = 'active'
+   ORDER BY business_date ASC;
+   ```
+2. 取得結果を[SheetInstanceModel.fromMap](../models/sheet_instance_model.md)でそれぞれ変換し、リストとして返却する。

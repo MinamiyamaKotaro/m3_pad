@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/time_format.dart';
 import '../../domain/entities/enums/enums.dart';
 import '../../domain/entities/header.dart';
 import '../../domain/entities/sheet_detail.dart';
@@ -49,6 +50,23 @@ class VoucherSheetNotifier extends Notifier<VoucherSheetState> {
     required final DateTime businessDate,
   }) =>
       load(sheetTemplateId: sheetTemplateId, businessDate: businessDate);
+
+  /// 設定画面（ヘッダー・スタッフの追加・更新・削除）から戻った際に
+  /// 呼び出され、表示中の伝票インスタンスを読込中表示を挟まずに再読込する。
+  /// 未読込（[load]前）の場合は何もしない。
+  Future<void> refresh() async {
+    if (_sheetInstanceId == null) {
+      return;
+    }
+    try {
+      await _reload();
+    } on Exception catch (error) {
+      state = state.copyWith(
+        status: VoucherSheetStatus.error,
+        errorMessage: error.toString(),
+      );
+    }
+  }
 
   /// 現在の伝票インスタンスに1組の来店・卓を追加し、表示を更新する。
   Future<void> addRow({final String? customerId, final String? staffId}) =>
@@ -181,21 +199,48 @@ class VoucherSheetNotifier extends Notifier<VoucherSheetState> {
   }
 
   /// 就業時刻編集の確定時に呼び出す。
+  ///
+  /// [value] を`HH:mm`形式に正規化して保存する。形式不正の場合は保存せず
+  /// 編集を終了し、`cellInputFailed`を通知する。
   Future<void> commitStaffShiftTime(final String value) async {
     final String? shiftId = state.editingStaffShiftId;
     final String? field = state.editingStaffShiftField;
     if (shiftId == null || field == null) {
       return;
     }
+    final String? time = normalizeHHmm(value);
+    if (time == null) {
+      _clearEditingStaffShiftIfStill(shiftId, field);
+      ref.read(voucherSheetEffectProvider.notifier).emit(
+            const VoucherSheetEffect(
+              kind: VoucherSheetEffectKind.cellInputFailed,
+              message: '時刻はHH:mm形式（例: 18:30）で入力してください',
+            ),
+          );
+      return;
+    }
     final StaffShift current = _findShift(shiftId);
     await _runOrNotifyFailure(() async {
       await ref.read(updateStaffShiftUsecaseProvider).call(
             current: current,
-            startTime: field == 'start' ? value : null,
-            endTime: field == 'end' ? value : null,
+            startTime: field == 'start' ? time : null,
+            endTime: field == 'end' ? time : null,
           );
-      state = state.copyWith(clearEditingStaffShift: true);
+      _clearEditingStaffShiftIfStill(shiftId, field);
     });
+  }
+
+  /// 編集中のシフト時刻が[shiftId]・[field]のままの場合のみ編集状態を解除
+  /// する（保存待ちの間に別の時刻ボタンがタップされた場合、その編集状態を
+  /// 消さないため）。
+  void _clearEditingStaffShiftIfStill(
+    final String shiftId,
+    final String field,
+  ) {
+    if (state.editingStaffShiftId == shiftId &&
+        state.editingStaffShiftField == field) {
+      state = state.copyWith(clearEditingStaffShift: true);
+    }
   }
 
   /// 現在の伝票インスタンスをCSVとして出力する。

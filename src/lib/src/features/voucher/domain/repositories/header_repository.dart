@@ -12,6 +12,9 @@ abstract interface class HeaderRepository {
   /// [sheetTemplateId] に紐づく列一覧を`displayOrder`昇順で取得する。
   Future<List<Header>> findByTemplateId(final String sheetTemplateId);
 
+  /// [header] の`name`・`category`・`isVisible`を上書きする。
+  Future<void> update(final Header header);
+
   /// 複数列の表示順を1回のSQLで一括更新する。
   ///
   /// key=columnId, value=displayOrder。

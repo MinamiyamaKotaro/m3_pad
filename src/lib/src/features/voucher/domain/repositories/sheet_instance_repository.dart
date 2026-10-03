@@ -15,4 +15,12 @@ abstract interface class SheetInstanceRepository {
     final String sheetTemplateId,
     final DateTime businessDate,
   );
+
+  /// [sheetTemplateId] に紐づき、[from]〜[to]（両端含む）の営業日を持つ
+  /// 伝票インスタンス一覧を`businessDate`昇順で取得する。
+  Future<List<SheetInstance>> findByTemplateIdAndDateRange(
+    final String sheetTemplateId,
+    final DateTime from,
+    final DateTime to,
+  );
 }

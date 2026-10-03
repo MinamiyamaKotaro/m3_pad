@@ -97,6 +97,14 @@ class GetSheetDetailUsecase {
     final Map<String, Customer> customersById = <String, Customer>{
       for (final Customer customer in customers) customer.customerId: customer,
     };
+    // 本伝票の営業日より前に来店履歴がない顧客を新規客とする。
+    final List<String> visitedCustomerIds =
+        await _rowRepository.findCustomerIdsVisitedBefore(
+      customerIds,
+      instance.businessDate,
+    );
+    final Set<String> newCustomerIds = customerIds.toSet()
+      ..removeAll(visitedCustomerIds);
 
     final Map<String, int> unitPricesByColumnId = <String, int>{};
     for (final Header header in headers) {
@@ -122,6 +130,7 @@ class GetSheetDetailUsecase {
       staffRoster: staffRoster,
       customersById: customersById,
       unitPricesByColumnId: unitPricesByColumnId,
+      newCustomerIds: newCustomerIds,
     );
   }
 }

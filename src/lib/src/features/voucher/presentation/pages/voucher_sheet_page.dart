@@ -14,6 +14,7 @@ import '../controllers/voucher_sheet_notifier.dart';
 import '../controllers/voucher_sheet_state.dart';
 import '../widgets/voucher_sheet_grid.dart';
 import '../widgets/voucher_staff_bar.dart';
+import 'settings_menu_page.dart';
 
 /// 伝票入力画面（画面ID: `MMM_001_VOUCHER`）。
 ///
@@ -98,6 +99,22 @@ class _VoucherSheetPageState extends ConsumerState<VoucherSheetPage> {
         .load(sheetTemplateId: widget.sheetTemplateId, businessDate: picked);
   }
 
+  /// 設定画面へ遷移し、戻った際にヘッダー・スタッフの変更を反映するため
+  /// 伝票を再読込する。
+  Future<void> _openSettings() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (final BuildContext context) => SettingsMenuPage(
+          sheetTemplateId: widget.sheetTemplateId,
+        ),
+      ),
+    );
+    if (!mounted) {
+      return;
+    }
+    await ref.read(voucherSheetNotifierProvider.notifier).refresh();
+  }
+
   @override
   Widget build(final BuildContext context) {
     ref.listen<VoucherSheetEffect?>(voucherSheetEffectProvider, (
@@ -169,6 +186,10 @@ class _VoucherSheetPageState extends ConsumerState<VoucherSheetPage> {
                 ? notifier.exportCsv
                 : null,
           ),
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: _openSettings,
+          ),
         ],
       ),
       body: _buildBody(context, state, notifier),
@@ -237,6 +258,7 @@ class _VoucherSheetPageState extends ConsumerState<VoucherSheetPage> {
                 cellsByRowIdAndColumnId: detail.cellsByRowIdAndColumnId,
                 staffRoster: detail.staffRoster,
                 customersById: detail.customersById,
+                newCustomerIds: detail.newCustomerIds,
                 dailySummary: detail.dailySummary,
                 editingRowId: state.editingRowId,
                 editingColumnId: state.editingColumnId,

@@ -1,16 +1,19 @@
-import '../../../../core/utils/sqlite_date.dart';
 import '../entities/customer.dart';
 import '../entities/header.dart';
+import '../entities/header_price.dart';
 import '../entities/sheet_cell.dart';
 import '../entities/sheet_instance.dart';
 import '../entities/sheet_row.dart';
 import '../entities/staff.dart';
 import '../repositories/customer_repository.dart';
+import '../repositories/header_price_repository.dart';
 import '../repositories/header_repository.dart';
 import '../repositories/sheet_cell_repository.dart';
 import '../repositories/sheet_instance_repository.dart';
 import '../repositories/sheet_row_repository.dart';
 import '../repositories/staff_repository.dart';
+import 'csv_sheet_formatter.dart';
+import 'header_grouping.dart';
 
 /// 指定した伝票インスタンス（1営業日分の伝票）を、紙伝票と同じ列構成の
 /// CSVとして出力するユースケース（FR-3）。
@@ -29,12 +32,14 @@ class ExportDailySheetToCsvUsecase {
     required final SheetCellRepository cellRepository,
     required final CustomerRepository customerRepository,
     required final StaffRepository staffRepository,
+    required final HeaderPriceRepository headerPriceRepository,
   })  : _instanceRepository = instanceRepository,
         _headerRepository = headerRepository,
         _rowRepository = rowRepository,
         _cellRepository = cellRepository,
         _customerRepository = customerRepository,
-        _staffRepository = staffRepository;
+        _staffRepository = staffRepository,
+        _headerPriceRepository = headerPriceRepository;
 
   final SheetInstanceRepository _instanceRepository;
   final HeaderRepository _headerRepository;
@@ -42,6 +47,7 @@ class ExportDailySheetToCsvUsecase {
   final SheetCellRepository _cellRepository;
   final CustomerRepository _customerRepository;
   final StaffRepository _staffRepository;
+  final HeaderPriceRepository _headerPriceRepository;
 
   /// 指定した [sheetInstanceId] の伝票インスタンスをCSV文字列として出力する。
   ///
@@ -52,6 +58,20 @@ class ExportDailySheetToCsvUsecase {
     );
     final List<Header> headers = await _headerRepository.findByTemplateId(
       instance.sheetTemplateId,
+    );
+    // 伝票入力画面と同じく、同額の列を1グループとして1列に出力する。
+    // グルーピングは営業日時点の単価で行う。
+    final List<String> pricedColumnIds = headers
+        .where((final Header header) => header.isPriced)
+        .map((final Header header) => header.columnId)
+        .toList();
+    final List<HeaderPrice> prices = await _headerPriceRepository
+        .findCurrentPrices(pricedColumnIds, instance.businessDate);
+    final List<List<Header>> headerGroups = groupHeadersByPrice(
+      headers,
+      <String, int>{
+        for (final HeaderPrice price in prices) price.columnId: price.price,
+      },
     );
     final List<SheetRow> rows = await _rowRepository.findByInstanceId(
       sheetInstanceId,
@@ -80,45 +100,22 @@ class ExportDailySheetToCsvUsecase {
       for (final Staff staff in staffRoster) staff.staffId: staff,
     };
 
-    final String businessDate = formatDateOnly(instance.businessDate);
-    final List<String> headerLine = <String>[
-      _escape('営業日'),
-      _escape('お名前'),
-      ...headers.map((final Header header) => _escape(header.name)),
-      _escape('合計金額'),
-      _escape('担当'),
-    ];
+    final List<String> rowLines = rows
+        .map(
+          (final SheetRow row) => csvRowLine(
+            instance: instance,
+            row: row,
+            headerGroups: headerGroups,
+            cellByRowAndColumn: cellByRowAndColumn,
+            customersById: customersById,
+            staffById: staffById,
+          ),
+        )
+        .toList();
 
-    final List<String> rowLines = rows.map((final SheetRow row) {
-      final Customer? customer =
-          row.customerId == null ? null : customersById[row.customerId];
-      final Staff? staff = row.staffId == null ? null : staffById[row.staffId];
-      final List<String> values = <String>[
-        _escape(businessDate),
-        _escape(customer?.name ?? ''),
-        ...headers.map((final Header header) {
-          final SheetCell? cell =
-              cellByRowAndColumn['${row.rowId}:${header.columnId}'];
-          if (cell == null) {
-            return '';
-          }
-          return header.isPriced
-              ? _escape((cell.amount ?? 0).toString())
-              : _escape(cell.content ?? '');
-        }),
-        _escape(row.totalAmount.toString()),
-        _escape(staff?.name ?? ''),
-      ];
-      return values.join(',');
-    }).toList();
-
-    return <String>[headerLine.join(','), ...rowLines].join('\n');
-  }
-
-  String _escape(final String value) {
-    if (value.contains(',') || value.contains('"') || value.contains('\n')) {
-      return '"${value.replaceAll('"', '""')}"';
-    }
-    return value;
+    return <String>[
+      csvHeaderLine(headerGroups).join(','),
+      ...rowLines,
+    ].join('\n');
   }
 }

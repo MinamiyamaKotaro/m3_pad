@@ -1,6 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 
 import '../../../../core/errors/record_not_found_exception.dart';
+import '../../../../core/utils/sqlite_date.dart';
 import '../../domain/entities/enums/enums.dart';
 import '../models/sheet_row_model.dart';
 
@@ -73,5 +74,56 @@ class SheetRowLocalDataSource {
       orderBy: 'row_order ASC',
     );
     return rows.map(SheetRowModel.fromMap).toList();
+  }
+
+  /// 複数の [sheetInstanceIds] に紐づく有効な行を一括取得する。
+  Future<List<SheetRowModel>> findByInstanceIds(
+    final List<String> sheetInstanceIds,
+  ) async {
+    if (sheetInstanceIds.isEmpty) {
+      return <SheetRowModel>[];
+    }
+    final String placeholders = List<String>.filled(
+      sheetInstanceIds.length,
+      '?',
+    ).join(', ');
+    final List<Map<String, Object?>> rows = await _db.rawQuery(
+      'SELECT * FROM t_row '
+      'WHERE sheet_instance_id IN ($placeholders) AND status = ? '
+      'ORDER BY sheet_instance_id ASC, row_order ASC',
+      <Object?>[...sheetInstanceIds, RecordStatus.active.dbValue],
+    );
+    return rows.map(SheetRowModel.fromMap).toList();
+  }
+
+  /// [customerIds] のうち、[businessDate] より前の営業日の伝票に有効な行が
+  /// 存在する（来店履歴がある）顧客IDを一括取得する（新規客の判定用）。
+  Future<List<String>> findCustomerIdsVisitedBefore(
+    final List<String> customerIds,
+    final DateTime businessDate,
+  ) async {
+    if (customerIds.isEmpty) {
+      return <String>[];
+    }
+    final String placeholders = List<String>.filled(
+      customerIds.length,
+      '?',
+    ).join(', ');
+    final List<Map<String, Object?>> rows = await _db.rawQuery(
+      'SELECT DISTINCT r.customer_id FROM t_row r '
+      'INNER JOIN t_sheet_instance si '
+      'ON si.sheet_instance_id = r.sheet_instance_id '
+      'WHERE r.customer_id IN ($placeholders) '
+      'AND si.business_date < ? AND r.status = ? AND si.status = ?',
+      <Object?>[
+        ...customerIds,
+        formatDateOnly(businessDate),
+        RecordStatus.active.dbValue,
+        RecordStatus.active.dbValue,
+      ],
+    );
+    return rows
+        .map((final Map<String, Object?> row) => row['customer_id']! as String)
+        .toList();
   }
 }

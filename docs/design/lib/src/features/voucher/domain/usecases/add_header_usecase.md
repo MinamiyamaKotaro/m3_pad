@@ -3,10 +3,11 @@
 | 新規作成・更新日 | 作成・更新者名 | 作成・更新内容 |
 |---|---|---|
 | 2026-09-25 | minamiyama | 新規作成 |
+| 2026-09-29 | minamiyama | ヘッダー管理画面（`MMM_003_VOUCHER`、FR-6）からの追加に対応するため、任意引数`category`（デフォルト`HeaderCategory.none`）・`isVisible`（デフォルト`true`）を追加 |
 
 ## 処理概要
 
-伝票フォーマットに列（[Header](../entities/header.md)）を1件追加するユースケース（FR-1）。価格対象の列の場合は初期単価（[HeaderPrice](../entities/header_price.md)）も併せて登録する。列構成をシートごとに自由に増減できるようにするための機能。[SheetTemplateRepository](../repositories/sheet_template_repository.md)・[HeaderTypeRepository](../repositories/header_type_repository.md)・[HeaderRepository](../repositories/header_repository.md)・[HeaderPriceRepository](../repositories/header_price_repository.md)・[IdGenerator](../../../../core/utils/id_generator.md)に依存する。
+伝票フォーマットに列（[Header](../entities/header.md)）を1件追加するユースケース（FR-1・FR-6）。価格対象の列の場合は初期単価（[HeaderPrice](../entities/header_price.md)）も併せて登録する。列構成をシートごとに自由に増減できるようにするための機能。ヘッダー管理画面から追加する場合は`category`・`isVisible`も指定する。[SheetTemplateRepository](../repositories/sheet_template_repository.md)・[HeaderTypeRepository](../repositories/header_type_repository.md)・[HeaderRepository](../repositories/header_repository.md)・[HeaderPriceRepository](../repositories/header_price_repository.md)・[IdGenerator](../../../../core/utils/id_generator.md)に依存する。
 
 ## 処理シーケンス図
 
@@ -45,6 +46,8 @@ sequenceDiagram
 | 価格対象フラグ | isPriced | - | bool | 必須 | - |
 | 初期単価 | initialPrice | optional | int | `isPriced=true`の場合必須 | 単位は円 |
 | 単価適用開始日 | effectiveFrom | optional | DateTime | `isPriced=true`の場合必須, 日付のみ | - |
+| カテゴリー | category | - | [HeaderCategory](../entities/enums/header_category.md) | 任意 | デフォルト`HeaderCategory.none`。ヘッダー管理画面（FR-6）からの追加時に指定 |
+| 表示/非表示フラグ | isVisible | - | bool | 任意 | デフォルト`true`。ヘッダー管理画面（FR-6）からの追加時に指定 |
 
 ### output
 
@@ -68,7 +71,7 @@ sequenceDiagram
    条件a: `existingHeaders`が空の場合、変数`displayOrder`に1を格納する。\
    条件b: `existingHeaders`が空でない場合、変数`displayOrder`に`existingHeaders`内の最大`displayOrder`+1を格納する。
 5. [IdGenerator.generate](../../../../core/utils/id_generator.md)を呼び出し、変数`columnId`に格納する。
-6. `sheetTemplateId`・`typeId`・`name`・`displayOrder`・`isPriced`・`status=active`から[Header](../entities/header.md)エンティティを組み立て、変数`header`に格納する。
+6. `sheetTemplateId`・`typeId`・`name`・`displayOrder`・`isPriced`・`category`・`isVisible`・`status=active`から[Header](../entities/header.md)エンティティを組み立て、変数`header`に格納する。
 7. [HeaderRepository.insert](../repositories/header_repository.md)を`header`で呼び出し、永続化する。
 8. 条件a: `isPriced=true`の場合\
    (1). [IdGenerator.generate](../../../../core/utils/id_generator.md)を呼び出し、変数`priceId`に格納する。\

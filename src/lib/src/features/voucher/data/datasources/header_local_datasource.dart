@@ -42,6 +42,27 @@ class HeaderLocalDataSource {
     return rows.map(HeaderModel.fromMap).toList();
   }
 
+  /// [model]の`name`・`category`・`is_visible`を上書きする。
+  Future<void> update(final HeaderModel model) async {
+    final int affected = await _db.update(
+      'm_header',
+      <String, Object?>{
+        'name': model.name,
+        'category': model.category.dbValue,
+        'is_visible': model.isVisible ? 1 : 0,
+        'updated_at': model.updatedAt.toIso8601String(),
+      },
+      where: 'column_id = ? AND status = ?',
+      whereArgs: <Object?>[model.columnId, RecordStatus.active.dbValue],
+    );
+    if (affected == 0) {
+      throw RecordNotFoundException(
+        entityName: 'Header',
+        id: model.columnId,
+      );
+    }
+  }
+
   /// 複数列の表示順を1回のトランザクションで一括更新する。
   Future<void> updateDisplayOrders(
     final Map<String, int> displayOrderByColumnId,

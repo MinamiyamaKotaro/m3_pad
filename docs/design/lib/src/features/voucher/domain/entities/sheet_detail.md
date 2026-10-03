@@ -4,6 +4,7 @@
 |---|---|---|
 | 2026-09-25 | minamiyama | 新規作成（presentation層の画面表示用に追加） |
 | 2026-09-27 | minamiyama | `staffShifts`・`dailySummary`・`staffRoster`・`customersById`を追加（[agents.md](../../../../../../../requried/agents.md)のスタッフ欄・日機能要件・お名前列仕様を反映） |
+| 2026-10-03 | minamiyama | お名前の登録後も初来店の伝票で「NEW」マークを表示するため、`newCustomerIds`を追加 |
 
 ## 概要
 
@@ -35,4 +36,5 @@ classDiagram
 | スタッフシフト一覧 | staffShifts | list | [StaffShift](./staff_shift.md) | 必須 | 右上「スタッフ」欄の表示用。[VoucherStaffBar](../../presentation/widgets/voucher_staff_bar.md)が表示する。3件未満の場合、[OpenSheetInstanceUsecase](../usecases/open_sheet_instance_usecase.md)が空のシフト枠を自動作成するため通常は3件 |
 | 日次集計 | dailySummary | - | [DailyPaymentSummary](./daily_payment_summary.md) | 必須 | 伝票末尾の行（[VoucherDailySummaryRow](../../presentation/widgets/voucher_daily_summary_row.md)）の表示用 |
 | スタッフ選択肢一覧 | staffRoster | list | [Staff](./staff.md) | 必須 | 有効なスタッフ一覧（[StaffRepository.findAllActive](../repositories/staff_repository.md)）。「担当」列プルダウンおよび[VoucherStaffBar](../../presentation/widgets/voucher_staff_bar.md)の氏名プルダウンの選択肢として使用する |
-| 顧客ID別顧客Map | customersById | map | string(key), [Customer](./customer.md)(value) | 必須 | キー=customerId。`rows`のうち`customerId`が非`null`の行の氏名表示用。「お名前」列の表示時に`row.customerId`が`null`であれば「-様」＋「NEW」マーク、非`null`であれば本Mapから引いた氏名＋「様」を表示する |
+| 顧客ID別顧客Map | customersById | map | string(key), [Customer](./customer.md)(value) | 必須 | キー=customerId。`rows`のうち`customerId`が非`null`の行の氏名表示用。「お名前」列の表示時に`row.customerId`が`null`であれば「-様」＋「NEW」マーク、非`null`であれば本Mapから引いた氏名＋「様」を表示する（`newCustomerIds`に含まれる場合は「NEW」マークも付ける） |
+| 新規客の顧客ID一覧 | newCustomerIds | set | string | 必須 | 本伝票の営業日が初来店（それより前の営業日の伝票に行がない）の顧客ID。「お名前」列の「NEW」マーク表示用 |

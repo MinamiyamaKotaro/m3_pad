@@ -4,6 +4,8 @@
 |---|---|---|
 | 2026-09-25 | minamiyama | 新規作成 |
 | 2026-09-27 | minamiyama | `insert`に`payment_method`カラムを追加。`update`を追加（お名前・担当・決済方法の後からの変更に対応） |
+| 2026-09-29 | minamiyama | `findByInstanceIds`を追加（複数営業日分の一括取得、FR-3） |
+| 2026-10-03 | minamiyama | お名前の登録後も初来店の伝票で「NEW」マークを表示するため、`findCustomerIdsVisitedBefore`を追加 |
 
 ## 処理概要
 
@@ -27,6 +29,10 @@ sequenceDiagram
     D->>DB: SELECT COALESCE(MAX(row_order), 0) FROM t_row WHERE sheet_instance_id = ?
     R->>D: findByInstanceId(sheetInstanceId)
     D->>DB: SELECT * FROM t_row WHERE sheet_instance_id = ?
+    R->>D: findCustomerIdsVisitedBefore(customerIds, businessDate)
+    D->>DB: SELECT DISTINCT r.customer_id FROM t_row r INNER JOIN t_sheet_instance si ... WHERE si.business_date < ?
+    R->>D: findByInstanceIds(sheetInstanceIds)
+    D->>DB: SELECT * FROM t_row WHERE sheet_instance_id IN (...)
 ```
 
 ## insert
@@ -178,3 +184,76 @@ sequenceDiagram
    SELECT * FROM t_row WHERE sheet_instance_id = :sheetInstanceId AND status = 'active' ORDER BY row_order ASC;
    ```
 2. 取得結果を[SheetRowModel.fromMap](../models/sheet_row_model.md)でそれぞれ変換し、リストとして返却する。
+
+## findByInstanceIds
+
+### 処理概要
+複数の`sheetInstanceIds`に紐づく有効な[SheetRowModel](../models/sheet_row_model.md)を`sheet_instance_id`・`row_order`昇順で一括取得する。伝票インスタンス数分ループしてDBを呼び出すことを避けるため、`IN`句による単一のSELECT文で全件を取得する（CSV期間出力、FR-3）。
+
+### input
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | バリデーション | 備考 |
+|---|---|---|---|---|---|
+| 伝票インスタンスID一覧 | sheetInstanceIds | list | string | 必須 | 空リストの場合はSQL発行前に空リストを返却する |
+
+### output
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | 備考 |
+|---|---|---|---|---|
+| 行一覧 | - | list | [SheetRowModel](../models/sheet_row_model.md) | 該当なしの場合は空リスト |
+
+### exception
+
+なし
+
+### 処理詳細
+1. 条件a: `sheetInstanceIds`が空リストの場合、空リストを返却し処理を終了する。\
+   条件b: 1件以上の場合、次のステップへ進む。
+2. `sheetInstanceIds`の件数分のプレースホルダ（`?`）を`IN`句として組み立てる（メモリ内処理、DBアクセスなし）。
+3. 以下のSQLをDBに対して1回発行する。
+   ```sql
+   SELECT * FROM t_row
+   WHERE sheet_instance_id IN (:sheetInstanceId1, :sheetInstanceId2, ...) AND status = 'active'
+   ORDER BY sheet_instance_id ASC, row_order ASC;
+   ```
+4. 取得結果を[SheetRowModel.fromMap](../models/sheet_row_model.md)でそれぞれ変換し、リストとして返却する。
+
+## findCustomerIdsVisitedBefore
+
+### 処理概要
+`customerIds`のうち、`businessDate`より前の営業日の伝票（有効な[SheetInstance](../../domain/entities/sheet_instance.md)）に有効な行が存在する（来店履歴がある）顧客IDを一括取得する。顧客ごとにループしてDBを呼び出すことを避けるため、`IN`句による単一のSELECT文で取得する（新規客の判定用）。
+
+### input
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | バリデーション | 備考 |
+|---|---|---|---|---|---|
+| 顧客ID一覧 | customerIds | list | string | 必須 | 空の場合は空リストを返す |
+| 営業日 | businessDate | - | DateTime | 必須, 日付のみ | この日より前（当日を含まない）の来店履歴を検索する |
+
+### output
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | 備考 |
+|---|---|---|---|---|
+| 来店履歴がある顧客ID一覧 | - | list | string | 重複なし。含まれない顧客は`businessDate`が初来店の新規客 |
+
+### exception
+
+なし
+
+### 処理詳細
+1. 条件a: `customerIds`が空リストの場合、空リストを返却し処理を終了する。\
+   条件b: 1件以上の場合、次のステップへ進む。
+2. `customerIds`の件数分のプレースホルダ（`?`）を`IN`句として組み立てる（メモリ内処理、DBアクセスなし）。
+3. 以下のSQLをDBに対して1回発行し、取得結果を変数`rows`に格納する（営業日は[sqlite_date.formatDateOnly](../../../../core/utils/sqlite_date.md)で整形）。
+   ```sql
+   SELECT DISTINCT r.customer_id FROM t_row r
+   INNER JOIN t_sheet_instance si ON si.sheet_instance_id = r.sheet_instance_id
+   WHERE r.customer_id IN (:customerId1, :customerId2, ...)
+     AND si.business_date < :businessDate
+     AND r.status = 'active' AND si.status = 'active';
+   ```
+4. `rows`の`customer_id`をリストにして返却する。
+
+| 変数論理名 | 変数物理名 | データ型 | 格納値 | 備考欄 |
+|---|---|---|---|---|
+| 取得結果 | rows | list<map> | SQLの取得結果 | `customer_id`のみ |

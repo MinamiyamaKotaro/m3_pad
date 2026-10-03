@@ -15,6 +15,8 @@ class HeaderModel extends Header {
     required super.status,
     required super.createdAt,
     required super.updatedAt,
+    super.category,
+    super.isVisible,
   });
 
   /// SQLiteの行（`m_header`テーブルの1行分）から [HeaderModel] を生成する。
@@ -25,6 +27,8 @@ class HeaderModel extends Header {
         name: map['name']! as String,
         displayOrder: map['display_order']! as int,
         isPriced: (map['is_priced']! as int) == 1,
+        category: HeaderCategory.fromDbValue(map['category']! as String),
+        isVisible: (map['is_visible']! as int) == 1,
         status: RecordStatus.fromDbValue(map['status']! as String),
         createdAt: DateTime.parse(map['created_at']! as String),
         updatedAt: DateTime.parse(map['updated_at']! as String),
@@ -38,6 +42,8 @@ class HeaderModel extends Header {
         'name': name,
         'display_order': displayOrder,
         'is_priced': isPriced ? 1 : 0,
+        'category': category.dbValue,
+        'is_visible': isVisible ? 1 : 0,
         'status': status.dbValue,
         'created_at': createdAt.toIso8601String(),
         'updated_at': updatedAt.toIso8601String(),

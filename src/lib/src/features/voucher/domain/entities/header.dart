@@ -17,6 +17,8 @@ class Header {
     required this.status,
     required this.createdAt,
     required this.updatedAt,
+    this.category = HeaderCategory.none,
+    this.isVisible = true,
   });
 
   /// 列ID。
@@ -36,6 +38,13 @@ class Header {
 
   /// 価格対象フラグ。`true`の場合、数量×単価方式のセルとなる。
   final bool isPriced;
+
+  /// カテゴリー。ヘッダーセルの色分け表示に使用する。
+  final HeaderCategory category;
+
+  /// 表示/非表示フラグ。`false`の場合、伝票グリッド上で列を非表示にする
+  /// （既存セルの数量・単価・合計金額計算には影響しない）。
+  final bool isVisible;
 
   /// 論理削除状態。
   final RecordStatus status;

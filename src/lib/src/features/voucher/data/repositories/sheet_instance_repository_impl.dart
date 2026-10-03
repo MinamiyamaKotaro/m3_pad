@@ -41,4 +41,19 @@ class SheetInstanceRepositoryImpl implements SheetInstanceRepository {
     );
     return result;
   }
+
+  @override
+  Future<List<SheetInstance>> findByTemplateIdAndDateRange(
+    final String sheetTemplateId,
+    final DateTime from,
+    final DateTime to,
+  ) async {
+    final List<SheetInstance> result =
+        await _dataSource.findByTemplateIdAndDateRange(
+      sheetTemplateId,
+      from,
+      to,
+    );
+    return result;
+  }
 }

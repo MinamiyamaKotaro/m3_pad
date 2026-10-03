@@ -5,12 +5,14 @@ import '../../domain/entities/customer.dart';
 
 /// 伝票入力画面のグリッド内で1行分の「お名前」列セルを表すウィジェット。
 ///
-/// 顧客が紐付いている場合は氏名＋「様」、未登録（新規客）の場合は「-様」＋
-/// 「NEW」マークを表示する。タップでインライン編集に切り替わる。
+/// 顧客が紐付いている場合は氏名＋「様」、未登録の場合は「-様」を表示する。
+/// 新規客（未登録、または表示中の営業日が初来店の顧客）の場合は「様」の隣に
+/// 「NEW」マークを付ける。タップでインライン編集に切り替わる。
 class VoucherNameCell extends StatelessWidget {
   /// [VoucherNameCell] を生成する。
   const VoucherNameCell({
     required this.customer,
+    required this.isNewCustomer,
     required this.isEditing,
     required this.onTap,
     required this.onChanged,
@@ -21,6 +23,10 @@ class VoucherNameCell extends StatelessWidget {
 
   /// 紐付く顧客。未登録（新規客）の場合は`null`。
   final Customer? customer;
+
+  /// 新規客フラグ。`true`の場合「NEW」マークを付ける（顧客未登録、または
+  /// 表示中の営業日が初来店の顧客）。
+  final bool isNewCustomer;
 
   /// 編集中フラグ。
   final bool isEditing;
@@ -42,6 +48,7 @@ class VoucherNameCell extends StatelessWidget {
     super.debugFillProperties(properties);
     properties
       ..add(DiagnosticsProperty<Customer?>('customer', customer))
+      ..add(DiagnosticsProperty<bool>('isNewCustomer', isNewCustomer))
       ..add(DiagnosticsProperty<bool>('isEditing', isEditing))
       ..add(StringProperty('editingText', editingText))
       ..add(ObjectFlagProperty<VoidCallback>.has('onTap', onTap))
@@ -56,11 +63,11 @@ class VoucherNameCell extends StatelessWidget {
     if (isEditing) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 4),
-        child: TextField(
+        child: TextFormField(
           autofocus: true,
-          controller: TextEditingController(text: editingText ?? ''),
+          initialValue: editingText ?? '',
           onChanged: onChanged,
-          onSubmitted: (final String _) => onSubmitted(),
+          onFieldSubmitted: (final String _) => onSubmitted(),
         ),
       );
     }
@@ -75,7 +82,7 @@ class VoucherNameCell extends StatelessWidget {
                 customer == null ? '-様' : '${customer!.name} 様',
               ),
             ),
-            if (customer == null)
+            if (isNewCustomer)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 4),
                 decoration: BoxDecoration(

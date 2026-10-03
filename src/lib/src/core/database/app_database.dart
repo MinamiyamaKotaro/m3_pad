@@ -19,7 +19,7 @@ class AppDatabase {
     final String path = p.join(await getDatabasesPath(), _fileName);
     final Database database = await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: (final Database db, final int version) async {
         for (final String statement in _createStatements) {
           await db.execute(statement);
@@ -28,12 +28,38 @@ class AppDatabase {
           await db.execute(statement);
         }
       },
+      onUpgrade: (
+        final Database db,
+        final int oldVersion,
+        final int newVersion,
+      ) async {
+        if (oldVersion < 2) {
+          for (final String statement in _migrationStatementsV2) {
+            await db.execute(statement);
+          }
+        }
+      },
       onConfigure: (final Database db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
     );
     return database;
   }
+
+  /// v1→v2マイグレーション（[docs/requried/db_schema.md](../../../../../docs/requried/db_schema.md)
+  /// §2.3参照）: `m_header`に`category`・`is_visible`を追加する。設定機能
+  /// （ヘッダーのカテゴリー・表示/非表示管理、FR-6）のための追加のみの
+  /// マイグレーションで、既存データへの影響はない。
+  static const List<String> _migrationStatementsV2 = <String>[
+    '''
+    ALTER TABLE m_header ADD COLUMN category TEXT NOT NULL
+        CHECK (category IN ('none', 'drink', 'bottle', 'food')) DEFAULT 'none';
+    ''',
+    '''
+    ALTER TABLE m_header ADD COLUMN is_visible INTEGER NOT NULL
+        CHECK (is_visible IN (0, 1)) DEFAULT 1;
+    ''',
+  ];
 
   static const List<String> _createStatements = <String>[
     '''
@@ -61,6 +87,8 @@ class AppDatabase {
         name                TEXT NOT NULL,
         display_order       INTEGER NOT NULL,
         is_priced           INTEGER NOT NULL CHECK (is_priced IN (0, 1)) DEFAULT 0,
+        category            TEXT NOT NULL CHECK (category IN ('none', 'drink', 'bottle', 'food')) DEFAULT 'none',
+        is_visible          INTEGER NOT NULL CHECK (is_visible IN (0, 1)) DEFAULT 1,
         status              TEXT NOT NULL CHECK (status IN ('active', 'deleted')) DEFAULT 'active',
         created_at          TEXT NOT NULL,
         updated_at          TEXT NOT NULL

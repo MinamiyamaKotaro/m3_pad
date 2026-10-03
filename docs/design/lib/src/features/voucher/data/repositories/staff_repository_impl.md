@@ -3,6 +3,8 @@
 | 新規作成・更新日 | 作成・更新者名 | 作成・更新内容 |
 |---|---|---|
 | 2026-09-25 | minamiyama | 新規作成 |
+| 2026-09-29 | minamiyama | `insert`・`updateName`・`updateStatus`を追加（FR-7） |
+| 2026-09-29 | minamiyama | `findByName`を追加 |
 
 ## 処理概要
 
@@ -16,11 +18,43 @@ sequenceDiagram
     participant Impl as StaffRepositoryImpl
     participant D as StaffLocalDataSource
 
+    U->>Impl: insert(staff)
+    Impl->>D: insert(StaffModel化)
     U->>Impl: findById(staffId)
     Impl->>D: findById(staffId)
     U->>Impl: findAllActive()
     Impl->>D: findAllActive()
+    U->>Impl: findByName(name)
+    Impl->>D: findByName(name)
+    U->>Impl: updateName(staffId, name)
+    Impl->>D: updateName(staffId, name)
+    U->>Impl: updateStatus(staffId, status)
+    Impl->>D: updateStatus(staffId, status)
 ```
+
+## insert
+
+### 処理概要
+`staff`を[StaffModel](../models/staff_model.md)へ変換し、[StaffLocalDataSource.insert](../datasources/staff_local_datasource.md)に処理を委譲する。
+
+### input
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | バリデーション | 備考 |
+|---|---|---|---|---|---|
+| スタッフ | staff | - | [Staff](../../domain/entities/staff.md) | 必須 | - |
+
+### output
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | 備考 |
+|---|---|---|---|---|
+| - | - | - | void | - |
+
+### exception
+
+なし
+
+### 処理詳細
+1. `staff`を[StaffModel](../models/staff_model.md)へ変換し、[StaffLocalDataSource.insert](../datasources/staff_local_datasource.md)を呼び出す。
 
 ## findById
 
@@ -69,3 +103,79 @@ sequenceDiagram
 
 ### 処理詳細
 1. [StaffLocalDataSource.findAllActive](../datasources/staff_local_datasource.md)を呼び出し、結果をそのまま返却する。
+
+## findByName
+
+### 処理概要
+[StaffLocalDataSource.findByName](../datasources/staff_local_datasource.md)に処理を委譲する。
+
+### input
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | バリデーション | 備考 |
+|---|---|---|---|---|---|
+| 氏名 | name | - | string | 必須 | - |
+
+### output
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | 備考 |
+|---|---|---|---|---|
+| スタッフ | - | optional | [Staff](../../domain/entities/staff.md) | 該当なしの場合は`null`。実体は[StaffModel](../models/staff_model.md) |
+
+### exception
+
+なし
+
+### 処理詳細
+1. [StaffLocalDataSource.findByName](../datasources/staff_local_datasource.md)を呼び出し、結果をそのまま返却する。
+
+## updateName
+
+### 処理概要
+[StaffLocalDataSource.updateName](../datasources/staff_local_datasource.md)に処理を委譲する。
+
+### input
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | バリデーション | 備考 |
+|---|---|---|---|---|---|
+| スタッフID | staffId | - | string | 必須 | - |
+| 氏名 | name | - | string | 必須 | - |
+
+### output
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | 備考 |
+|---|---|---|---|---|
+| - | - | - | void | - |
+
+### exception
+
+| exception論理名 | exception物理名 | エラーコード | エラーメッセージ | 備考 |
+|---|---|---|---|---|
+| レコード未検出 | [RecordNotFoundException](../../../../core/errors/record_not_found_exception.md) | - | - | [StaffLocalDataSource.updateName](../datasources/staff_local_datasource.md)からそのまま伝播 |
+
+### 処理詳細
+1. [StaffLocalDataSource.updateName](../datasources/staff_local_datasource.md)を`staffId`・`name`で呼び出す。
+
+## updateStatus
+
+### 処理概要
+[StaffLocalDataSource.updateStatus](../datasources/staff_local_datasource.md)に処理を委譲する。
+
+### input
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | バリデーション | 備考 |
+|---|---|---|---|---|---|
+| スタッフID | staffId | - | string | 必須 | - |
+| 論理削除状態 | status | - | [RecordStatus](../../domain/entities/enums/record_status.md) | 必須 | - |
+
+### output
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | 備考 |
+|---|---|---|---|---|
+| - | - | - | void | - |
+
+### exception
+
+なし
+
+### 処理詳細
+1. [StaffLocalDataSource.updateStatus](../datasources/staff_local_datasource.md)を`staffId`・`status`で呼び出す。

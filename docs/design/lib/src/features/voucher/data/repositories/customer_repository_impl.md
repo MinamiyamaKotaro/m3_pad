@@ -4,6 +4,7 @@
 |---|---|---|
 | 2026-09-25 | minamiyama | 新規作成 |
 | 2026-09-27 | minamiyama | `insert`・`findByIds`を追加 |
+| 2026-09-29 | minamiyama | `findByName`を追加 |
 
 ## 処理概要
 
@@ -96,3 +97,27 @@ sequenceDiagram
 
 ### 処理詳細
 1. [CustomerLocalDataSource.findById](../datasources/customer_local_datasource.md)を呼び出し、結果をそのまま返却する。
+
+## findByName
+
+### 処理概要
+[CustomerLocalDataSource.findByName](../datasources/customer_local_datasource.md)に処理を委譲する。
+
+### input
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | バリデーション | 備考 |
+|---|---|---|---|---|---|
+| 氏名 | name | - | string | 必須 | - |
+
+### output
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | 備考 |
+|---|---|---|---|---|
+| 顧客 | - | optional | [Customer](../../domain/entities/customer.md) | 該当なしの場合は`null`。実体は[CustomerModel](../models/customer_model.md) |
+
+### exception
+
+なし
+
+### 処理詳細
+1. [CustomerLocalDataSource.findByName](../datasources/customer_local_datasource.md)を呼び出し、結果をそのまま返却する。

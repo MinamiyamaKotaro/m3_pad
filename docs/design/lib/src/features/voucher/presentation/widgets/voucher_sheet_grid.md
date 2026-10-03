@@ -5,6 +5,11 @@
 | 2026-09-29 | minamiyama | 新規作成。[docs/ui/wireframe](../../../../../../../ui/wireframe/app.js)（`table.sheet`の`position: sticky`によるヘッダー行/本日の合計行/お名前列/合計金額列/担当列の固定表示）を正として、旧`VoucherSheetPage`内のスクロール実装（縦横とも単純な`SingleChildScrollView`のネストのみで固定表示なし）を置き換え。旧`VoucherDataRow`を廃止し、[VoucherNameCell](./voucher_name_cell.md)・[VoucherTotalCell](./voucher_total_cell.md)・[VoucherStaffSelectCell](./voucher_staff_select_cell.md)に分割 |
 | 2026-09-29 | minamiyama | 「合計金額」列の金額・決済方法別内訳（[VoucherDailySummaryRow](./voucher_daily_summary_row.md)）が折り返して下に回り込んでいたのを修正するため、列幅を96pxから140pxへ拡張。あわせて本日の合計行における「合計金額」列セルの右罫線を削除 |
 | 2026-09-29 | minamiyama | MEMO列の入力量に応じて行の高さが本来の必要高さ（[_rowHeight]、「合計金額」列の高さと同一）より大きくなる場合に、その行全体（お名前・各価格列・MEMO・合計金額・担当）の高さを統一する`_computeRowHeights`を追加。あわせて、価格列（スピンボタン）・「合計金額」・「担当」セルが行の高さ拡大に追従せず上詰めになっていた不具合を修正（`_verticalCenter`により、幅は保ったまま縦方向のみ中央揃えするよう変更） |
+| 2026-09-29 | minamiyama | ヘッダー管理機能（FR-6）の表示/非表示（`Header.isVisible`）に対応するため、`_visibleHeaders`（`widget.headers`から`isVisible=true`のみを抽出したリスト）を追加。[VoucherHeaderRow](./voucher_header_row.md)への列一覧の受け渡し、価格列＋MEMO列領域の描画幅（`middleWidth`）・各行のセル一覧（`_priceCellsFor`）を`_visibleHeaders`基準に変更し、非表示列は列として描画しないようにした。行の高さ算出（`_computeRowHeights`）・合計金額計算・CSV出力は引き続き全列（非表示含む）を対象とするロジック側で行うため、非表示列のセルデータ・金額計算には影響しない |
+| 2026-09-29 | minamiyama | 現在の単価が同額の列が元々隣接していない場合にグルーピング表示（[VoucherHeaderRow](./voucher_header_row.md)）が成立していなかった不具合を修正するため、`_visibleHeaders`に同額の価格対象列を隣接させる並べ替え（`_groupByPrice`、価格ごとの初出順を保つ安定グルーピング）を追加。あわせて、非価格対象の列（MEMO）を常に価格対象の列より後ろに描画するようにし、ヘッダー管理画面での列追加によりMEMOより後ろに新しい列が描画されないようにした |
+| 2026-09-29 | minamiyama | 「お名前」「合計金額」「担当」のヘッダー見出しを太字（`FontWeight.bold`）表示に変更（[VoucherHeaderRow](./voucher_header_row.md)側の列名太字化と合わせ、全ヘッダー見出しを太字に統一） |
+| 2026-10-03 | minamiyama | 個数セルを同額の列のグループにつき1つにするため、`_visibleHeaders`・`_groupByPrice`を`_visibleHeaderGroups`（[groupHeadersByPrice](../../domain/usecases/header_grouping.md#groupheadersbyprice)を使用）に置き換え。価格対象のグループは[VoucherQuantityCell](./voucher_quantity_cell.md)を1つ（幅`96px × グループ内列数`）描画し、個数はグループの先頭の列（代表列）に保存する。MEMO列は引き続き[VoucherCellField](./voucher_cell_field.md)で描画する |
+| 2026-10-03 | minamiyama | お名前の登録後も初来店の伝票で「NEW」マークを表示するため、`newCustomerIds`（[SheetDetail.newCustomerIds](../../domain/entities/sheet_detail.md)）を受け取り、[VoucherNameCell](./voucher_name_cell.md)の`isNewCustomer`（`customerId`が`null`、または`newCustomerIds`に含まれる場合に`true`）を渡すよう変更 |
 
 ## 概要
 
@@ -24,7 +29,8 @@ classDiagram
     VoucherSheetPage --> VoucherSheetGrid : uses
     VoucherSheetGrid --> VoucherHeaderRow : uses
     VoucherSheetGrid --> VoucherNameCell : uses
-    VoucherSheetGrid --> VoucherCellField : uses
+    VoucherSheetGrid --> VoucherCellField : uses（MEMO列）
+    VoucherSheetGrid --> VoucherQuantityCell : uses（価格対象のグループ）
     VoucherSheetGrid --> VoucherTotalCell : uses
     VoucherSheetGrid --> VoucherStaffSelectCell : uses
     VoucherSheetGrid --> VoucherAddRowButton : uses
@@ -43,6 +49,7 @@ classDiagram
 | 行ID・列ID別セルMap | cellsByRowIdAndColumnId | map | string(key), map(value) | 必須 | `sheetDetail.cellsByRowIdAndColumnId`をそのまま渡す |
 | スタッフ選択肢一覧 | staffRoster | list | [Staff](../../domain/entities/staff.md) | 必須 | 「担当」列プルダウンの選択肢。`sheetDetail.staffRoster`をそのまま渡す |
 | 顧客ID別顧客Map | customersById | map | string(key), [Customer](../../domain/entities/customer.md)(value) | 必須 | 「お名前」列の氏名表示用。`sheetDetail.customersById`をそのまま渡す |
+| 新規客の顧客ID一覧 | newCustomerIds | set | string | 必須 | [SheetDetail.newCustomerIds](../../domain/entities/sheet_detail.md)。「お名前」列の「NEW」マーク表示用 |
 | 日次集計 | dailySummary | - | [DailyPaymentSummary](../../domain/entities/daily_payment_summary.md) | 必須 | `sheetDetail.dailySummary`をそのまま渡す |
 | 編集中の行ID | editingRowId | optional | string | 任意 | [VoucherSheetState.editingRowId](../controllers/voucher_sheet_state.md)をそのまま渡す |
 | 編集中の列ID | editingColumnId | optional | string | 任意 | [VoucherSheetState.editingColumnId](../controllers/voucher_sheet_state.md)をそのまま渡す。「お名前」列編集中の場合は特別な値`'customerName'` |
@@ -71,6 +78,25 @@ Flutterには表組みの一部の行・列のみを固定表示するCSSの`pos
 - MEMO列（`isPriced=false`の列）に入力がある場合、`TextPainter`でその内容を列幅（`_priceColWidth`）に合わせて折り返した際の必要高さを算出し、`_rowHeight`を上回る場合はその値を採用する。
 - 算出した高さは、お名前セル・価格セル（スピンボタン）・MEMOセル・合計金額セル・担当セルのすべてに同一の値を適用する。
 - 価格セル（スピンボタン）・合計金額セル・担当セルは、行の高さがミニマムより大きくなった場合でも内容物のサイズを保ったまま縦方向中央に表示する必要があるため、`_verticalCenter`（`Column`の`mainAxisAlignment.center`＋`crossAxisAlignment.stretch`）でラップする。横幅は`crossAxisAlignment.stretch`により維持されるため、「担当」プルダウンの`isExpanded`や「合計金額」の右揃えレイアウトは崩れない（`Container`の`alignment`プロパティで中央揃えすると横方向も内容物の自然幅に縮んでしまうため使用しない）。
+
+## 表示対象の列と描画順（非表示列の除外・同額グルーピング・MEMO末尾固定）
+
+`_visibleHeaderGroups`は、以下の手順で表示・描画順の列グループ一覧を組み立てる。
+
+1. `widget.headers`のうち`isVisible=true`の列のみを対象とする。`isVisible=false`の列は伝票グリッド上に列として表示しないが、既存セルの数量・単価データは保持されたままであり、合計金額（`SheetRow.totalAmount`、DBトリガーで自動更新）やCSV出力（[ExportDailySheetToCsvUsecase](../../domain/usecases/export_daily_sheet_to_csv_usecase.md)）は全列（非表示含む）を対象に計算するため、表示のON/OFFのみで金額に影響を与えない。
+2. [groupHeadersByPrice](../../domain/usecases/header_grouping.md#groupheadersbyprice)で、現在の単価（`widget.unitPricesByColumnId`）が同額の価格対象の列を1グループにまとめる（価格ごとの初出順、単価未登録の列は単独グループで元の位置を保つ）。これにより、元々離れた位置にあった同額の列（例:「二階堂・だいやめ」と「黒霧島」がともに700円）も1グループになる。
+3. 非価格対象の列（MEMO）は、常に価格対象のグループより後ろに単独グループとして並ぶ（ヘッダー管理画面での列追加により`displayOrder`がMEMOより後ろになっても、MEMOの後ろに新しい列が描画されない）。
+
+`_visibleHeaderGroups`は[VoucherHeaderRow](./voucher_header_row.md)への列グループ一覧・価格列＋MEMO列領域の描画幅（`middleWidth`＝`96px × 全グループの列数の合計`）・各行のセル一覧（`_priceCellsFor`）のいずれにも共通で用いるため、ヘッダー行とデータ行のグループの並び・幅は常に一致する。
+
+## 個数セル（同額の列のグループにつき1つ）
+
+- 価格対象のグループごとに[VoucherQuantityCell](./voucher_quantity_cell.md)を1つ、幅`96px × グループ内列数`で描画する（`_quantityCellFor`）。
+- 表示する個数は、グループ内の各列のセルの個数（`SheetCell.quantity`）の合計とする（価格改定でグループ構成が変わった場合や、グループ化前に先頭以外の列へ入力された個数も含めるため）。
+- 「＋」押下時は、グループの先頭の列（代表列）の個数を1増やす。
+- 「-」押下時は、代表列の個数が1以上なら代表列、0ならグループ内で個数が1以上の最初の列の個数を1減らす。グループ内の個数の合計が0の場合は「-」を無効化する。
+- 個数の更新は`_commitQuantity`で、対象の列について`onCellTap`（初期テキストに更新後の個数）→`onTextChanged`（更新後の個数）→`onCommit`の順に呼び出して即時確定する（[VoucherSheetNotifier.commitCell](../controllers/voucher_sheet_notifier.md#commitcell)で保存）。
+- 同額のグループのため、どの列に個数を保存しても合計金額は変わらない。
 
 ## 「行を追加」ボタンの配置
 

@@ -3,6 +3,7 @@
 | 新規作成・更新日 | 作成・更新者名 | 作成・更新内容 |
 |---|---|---|
 | 2026-09-25 | minamiyama | 新規作成 |
+| 2026-09-29 | minamiyama | `findByTemplateIdAndDateRange`を追加（FR-3） |
 
 ## 処理概要
 
@@ -22,6 +23,8 @@ sequenceDiagram
     Impl->>D: findById(sheetInstanceId)
     U->>Impl: findByTemplateAndDate(sheetTemplateId, businessDate)
     Impl->>D: findByTemplateAndDate(sheetTemplateId, businessDate)
+    U->>Impl: findByTemplateIdAndDateRange(sheetTemplateId, from, to)
+    Impl->>D: findByTemplateIdAndDateRange(sheetTemplateId, from, to)
 ```
 
 ## insert
@@ -98,3 +101,29 @@ sequenceDiagram
 
 ### 処理詳細
 1. [SheetInstanceLocalDataSource.findByTemplateAndDate](../datasources/sheet_instance_local_datasource.md)を呼び出し、結果をそのまま返却する。
+
+## findByTemplateIdAndDateRange
+
+### 処理概要
+[SheetInstanceLocalDataSource.findByTemplateIdAndDateRange](../datasources/sheet_instance_local_datasource.md)に処理を委譲する。
+
+### input
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | バリデーション | 備考 |
+|---|---|---|---|---|---|
+| 伝票フォーマットID | sheetTemplateId | - | string | 必須 | - |
+| 開始日 | from | - | DateTime | 必須, 日付のみ | - |
+| 終了日 | to | - | DateTime | 必須, 日付のみ | - |
+
+### output
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | 備考 |
+|---|---|---|---|---|
+| 伝票インスタンス一覧 | - | list | [SheetInstance](../../domain/entities/sheet_instance.md) | `businessDate`昇順。実体は[SheetInstanceModel](../models/sheet_instance_model.md)のリスト |
+
+### exception
+
+なし
+
+### 処理詳細
+1. [SheetInstanceLocalDataSource.findByTemplateIdAndDateRange](../datasources/sheet_instance_local_datasource.md)を呼び出し、結果をそのまま返却する。

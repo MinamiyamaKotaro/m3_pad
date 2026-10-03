@@ -29,6 +29,8 @@ class UpdateRowUsecase {
   ///
   /// - [customerName]: 「お名前」列を編集した場合のみ指定。空文字列は
   ///   「未登録（新規客）」を意味する。`null`（未指定）の場合は変更しない。
+  ///   既に同名の有効な顧客が存在する場合はその顧客に紐付け、重複した
+  ///   [Customer]は作成しない。存在しない場合のみ新規に作成する。
   /// - [staffId]: 「担当」列を変更した場合のみ`Some`を渡す（[hasStaffId]）。
   /// - [paymentMethod]: 決済方法を変更した場合のみ`Some`を渡す
   ///   （[hasPaymentMethod]）。
@@ -45,19 +47,26 @@ class UpdateRowUsecase {
       if (customerName.isEmpty) {
         customerId = null;
       } else if (current.customerId == null) {
-        final String newCustomerId = _idGenerator.generate();
-        final DateTime now = DateTime.now();
-        await _customerRepository.insert(
-          Customer(
-            customerId: newCustomerId,
-            name: customerName,
-            gender: Gender.none,
-            status: RecordStatus.active,
-            createdAt: now,
-            updatedAt: now,
-          ),
+        final Customer? existing = await _customerRepository.findByName(
+          customerName,
         );
-        customerId = newCustomerId;
+        if (existing != null) {
+          customerId = existing.customerId;
+        } else {
+          final String newCustomerId = _idGenerator.generate();
+          final DateTime now = DateTime.now();
+          await _customerRepository.insert(
+            Customer(
+              customerId: newCustomerId,
+              name: customerName,
+              gender: Gender.none,
+              status: RecordStatus.active,
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+          customerId = newCustomerId;
+        }
       }
     }
 

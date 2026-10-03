@@ -43,6 +43,24 @@ class HeaderRepositoryImpl implements HeaderRepository {
   }
 
   @override
+  Future<void> update(final Header header) async {
+    final HeaderModel model = HeaderModel(
+      columnId: header.columnId,
+      sheetTemplateId: header.sheetTemplateId,
+      typeId: header.typeId,
+      name: header.name,
+      displayOrder: header.displayOrder,
+      isPriced: header.isPriced,
+      category: header.category,
+      isVisible: header.isVisible,
+      status: header.status,
+      createdAt: header.createdAt,
+      updatedAt: header.updatedAt,
+    );
+    await _dataSource.update(model);
+  }
+
+  @override
   Future<void> updateDisplayOrders(
     final Map<String, int> displayOrderByColumnId,
   ) async {

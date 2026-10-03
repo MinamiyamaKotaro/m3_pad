@@ -3,10 +3,11 @@
 | 新規作成・更新日 | 作成・更新者名 | 作成・更新内容 |
 |---|---|---|
 | 2026-09-25 | minamiyama | 新規作成（domain層インターフェースとして定義） |
+| 2026-09-29 | minamiyama | `update`を追加（項目名・カテゴリー・表示/非表示の更新、[UpdateHeaderUsecase](../usecases/update_header_usecase.md)参照、FR-6） |
 
 ## 概要
 
-[Header](../entities/header.md)に対する永続化・検索・更新の契約のみを定義する抽象クラス。実装は[HeaderRepositoryImpl](../../data/repositories/header_repository_impl.md)が担う。[AddHeaderUsecase](../usecases/add_header_usecase.md)・[ReorderHeadersUsecase](../usecases/reorder_headers_usecase.md)・[RemoveHeaderUsecase](../usecases/remove_header_usecase.md)・[InputCellUsecase](../usecases/input_cell_usecase.md)・[ExportDailySheetToCsvUsecase](../usecases/export_daily_sheet_to_csv_usecase.md)が依存する。
+[Header](../entities/header.md)に対する永続化・検索・更新の契約のみを定義する抽象クラス。実装は[HeaderRepositoryImpl](../../data/repositories/header_repository_impl.md)が担う。[AddHeaderUsecase](../usecases/add_header_usecase.md)・[UpdateHeaderUsecase](../usecases/update_header_usecase.md)・[InputCellUsecase](../usecases/input_cell_usecase.md)・[ExportDailySheetToCsvUsecase](../usecases/export_daily_sheet_to_csv_usecase.md)が依存する。
 
 ## メソッド一覧
 
@@ -77,6 +78,30 @@
 #### exception
 
 なし
+
+### update
+
+| 項目 | 内容 |
+|---|---|
+| シグネチャ | `Future<void> update(Header header)` |
+
+#### input
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | バリデーション | 備考 |
+|---|---|---|---|---|---|
+| 列 | header | - | [Header](../entities/header.md) | 必須 | `columnId`で対象を特定し、`name`・`category`・`isVisible`を上書きする。`typeId`・`isPriced`は更新対象に含めない |
+
+#### output
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | 備考 |
+|---|---|---|---|---|
+| - | - | - | void | - |
+
+#### exception
+
+| exception論理名 | exception物理名 | エラーコード | エラーメッセージ | 備考 |
+|---|---|---|---|---|
+| レコード未検出 | [RecordNotFoundException](../../../../core/errors/record_not_found_exception.md) | - | - | `entityName="Header"`, `id=header.columnId` |
 
 ### updateDisplayOrders
 
