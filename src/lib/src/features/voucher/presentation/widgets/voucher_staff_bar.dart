@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../core/utils/time_format.dart';
 import '../../domain/entities/staff.dart';
 import '../../domain/entities/staff_shift.dart';
 
@@ -135,19 +136,17 @@ class VoucherStaffBar extends StatelessWidget {
                         onNameChanged(shift.shiftId, value),
                   ),
                 ),
-                _timeButton(context, shift, 'start', shift.startTime),
+                _timeButton(shift, 'start', shift.startTime),
                 const Text('～'),
-                _timeButton(context, shift, 'end', shift.endTime),
+                _timeButton(shift, 'end', shift.endTime),
                 const SizedBox(width: 4),
                 const Text('D', style: TextStyle(fontWeight: FontWeight.bold)),
                 SizedBox(
                   width: 96,
-                  child: TextField(
-                    controller: TextEditingController(
-                      text: shift.drinkBack ?? '',
-                    ),
-                    decoration: const InputDecoration(isDense: true),
-                    onSubmitted: (final String value) =>
+                  child: _DrinkBackField(
+                    key: ValueKey<String>(shift.shiftId),
+                    savedValue: shift.drinkBack ?? '',
+                    onCommit: (final String value) =>
                         onDrinkBackCommit(shift.shiftId, value),
                   ),
                 ),
@@ -158,7 +157,6 @@ class VoucherStaffBar extends StatelessWidget {
       );
 
   Widget _timeButton(
-    final BuildContext context,
     final StaffShift shift,
     final String field,
     final String? value,
@@ -170,15 +168,13 @@ class VoucherStaffBar extends StatelessWidget {
     }
     final bool isEditing =
         editingStaffShiftId == shift.shiftId && editingStaffShiftField == field;
-    final String now = TimeOfDay.now().format(context);
+    final String now = formatHHmm(DateTime.now());
     if (isEditing) {
       return SizedBox(
         width: 72,
-        child: TextFormField(
-          autofocus: true,
+        child: _StaffTimeField(
           initialValue: value ?? now,
-          decoration: const InputDecoration(isDense: true),
-          onFieldSubmitted: onTimeCommit,
+          onCommit: onTimeCommit,
         ),
       );
     }
@@ -187,6 +183,165 @@ class VoucherStaffBar extends StatelessWidget {
       child: Text(value ?? now),
     );
   }
+}
+
+/// 就業時刻の入力欄（[VoucherStaffBar]の画面内でのみ使用する）。
+///
+/// Enter（キーボードの完了）に加え、欄の外のタップやフォーカス喪失でも
+/// 入力値を確定する（docs/ui/wireframeの`change`・`blur`での確定に相当）。
+/// 確定は1回のみ行う。
+class _StaffTimeField extends StatefulWidget {
+  const _StaffTimeField({
+    required this.initialValue,
+    required this.onCommit,
+  });
+
+  /// 入力欄の初期値（`HH:mm`形式）。
+  final String initialValue;
+
+  /// 入力確定時コールバック。
+  final ValueChanged<String> onCommit;
+
+  @override
+  void debugFillProperties(final DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('initialValue', initialValue))
+      ..add(ObjectFlagProperty<ValueChanged<String>>.has('onCommit', onCommit));
+  }
+
+  @override
+  State<_StaffTimeField> createState() => _StaffTimeFieldState();
+}
+
+class _StaffTimeFieldState extends State<_StaffTimeField> {
+  late final TextEditingController _controller;
+  final FocusNode _focusNode = FocusNode();
+  bool _isCommitted = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialValue);
+    _focusNode.addListener(_handleFocusChange);
+  }
+
+  @override
+  void dispose() {
+    _focusNode
+      ..removeListener(_handleFocusChange)
+      ..dispose();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _handleFocusChange() {
+    if (!_focusNode.hasFocus) {
+      _commit();
+    }
+  }
+
+  void _commit() {
+    if (_isCommitted) {
+      return;
+    }
+    _isCommitted = true;
+    widget.onCommit(_controller.text);
+  }
+
+  @override
+  Widget build(final BuildContext context) => TextField(
+        controller: _controller,
+        focusNode: _focusNode,
+        autofocus: true,
+        keyboardType: TextInputType.datetime,
+        decoration: const InputDecoration(isDense: true),
+        onSubmitted: (final String _) => _commit(),
+        onTapOutside: (final PointerDownEvent _) => _focusNode.unfocus(),
+      );
+}
+
+/// ドリンクバック（「D」欄）の入力欄（[VoucherStaffBar]の画面内でのみ使用
+/// する）。
+///
+/// 自由記述（string型）として入力値をそのまま扱う。常時表示の欄のため、
+/// Enter（キーボードの完了）・欄の外のタップ・フォーカス喪失のいずれかで、
+/// 保存済みの値から変更がある場合のみ確定する。
+class _DrinkBackField extends StatefulWidget {
+  const _DrinkBackField({
+    required this.savedValue,
+    required this.onCommit,
+    super.key,
+  });
+
+  /// 保存済みのドリンクバック（未入力の場合は空文字列）。
+  final String savedValue;
+
+  /// 入力確定時コールバック。
+  final ValueChanged<String> onCommit;
+
+  @override
+  void debugFillProperties(final DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('savedValue', savedValue))
+      ..add(ObjectFlagProperty<ValueChanged<String>>.has('onCommit', onCommit));
+  }
+
+  @override
+  State<_DrinkBackField> createState() => _DrinkBackFieldState();
+}
+
+class _DrinkBackFieldState extends State<_DrinkBackField> {
+  late final TextEditingController _controller;
+  final FocusNode _focusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.savedValue);
+    _focusNode.addListener(_handleFocusChange);
+  }
+
+  @override
+  void didUpdateWidget(final _DrinkBackField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // 入力中でなければ、保存済みの値の変化（再読込など）を入力欄に反映する。
+    if (!_focusNode.hasFocus && widget.savedValue != oldWidget.savedValue) {
+      _controller.text = widget.savedValue;
+    }
+  }
+
+  @override
+  void dispose() {
+    _focusNode
+      ..removeListener(_handleFocusChange)
+      ..dispose();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _handleFocusChange() {
+    if (!_focusNode.hasFocus) {
+      _commit();
+    }
+  }
+
+  void _commit() {
+    if (_controller.text == widget.savedValue) {
+      return;
+    }
+    widget.onCommit(_controller.text);
+  }
+
+  @override
+  Widget build(final BuildContext context) => TextField(
+        controller: _controller,
+        focusNode: _focusNode,
+        decoration: const InputDecoration(isDense: true),
+        onSubmitted: (final String _) => _focusNode.unfocus(),
+        onTapOutside: (final PointerDownEvent _) => _focusNode.unfocus(),
+      );
 }
 
 /// 角丸の点線枠を描画する[CustomPainter]。

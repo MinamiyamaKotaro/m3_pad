@@ -5,6 +5,7 @@
 | 2026-09-25 | minamiyama | 新規作成 |
 | 2026-09-27 | minamiyama | お名前の更新を[commitCell](#commitcell)に統合し、担当・決済方法の更新（[setRowStaff](#setrowstaff)・[setRowPaymentMethod](#setrowpaymentmethod)）、スタッフ欄の更新（[setStaffShiftName](#setstaffshiftname)・[startEditingStaffShiftTime](#starteditingstaffshifttime)・[commitStaffShiftTime](#commitstaffshifttime)・[setStaffShiftDrinkBack](#setstaffshiftdrinkback)）を追加（[agents.md](../../../../../../../requried/agents.md)を反映） |
 | 2026-09-29 | minamiyama | [VoucherSheetGrid](../widgets/voucher_sheet_grid.md)導入に伴う呼び出し元の変更（旧`VoucherDataRow`→[VoucherNameCell](../widgets/voucher_name_cell.md)・[VoucherTotalCell](../widgets/voucher_total_cell.md)）を反映してリンクを更新（処理内容自体に変更はない） |
+| 2026-10-03 | minamiyama | [commitStaffShiftTime](#commitstaffshifttime)で入力値を[normalizeHHmm](../../../../core/utils/time_format.md#normalizehhmm)により`HH:mm`形式へ正規化し、形式不正の場合は保存せず`cellInputFailed`を通知するよう変更。保存待ちの間に別の時刻ボタンがタップされた場合に、その編集状態を消さないよう、編集状態の解除を確定対象と一致する場合のみに限定 |
 
 ## 処理概要
 
@@ -398,7 +399,7 @@ Error状態からの再試行。[load](#load)を再実行する。
 
 | 項目論理名 | 項目物理名 | カプセルの型 | データ型 | バリデーション | 備考 |
 |---|---|---|---|---|---|
-| 時刻 | value | - | string | 必須, `HH:mm`形式 | - |
+| 時刻 | value | - | string | 必須 | 時刻入力欄の入力値。`H:mm`・`HH:mm`・`Hmm`・`HHmm`（全角可）を受け付け、`HH:mm`に正規化する |
 
 ### output
 
@@ -411,11 +412,25 @@ Error状態からの再試行。[load](#load)を再実行する。
 なし（例外は[副作用仕様](#副作用side-effect仕様)の`cellInputFailed`と同様に通知する）
 
 ### 処理詳細
-1. `sheetDetail.staffShifts`から`editingStaffShiftId`に一致するシフトを取得し、変数`currentShift`に格納する。
-2. 条件a: `editingStaffShiftField='start'`の場合、[UpdateStaffShiftUsecase.call](../../domain/usecases/update_staff_shift_usecase.md)を`current=currentShift`・`startTime=value`で呼び出す。\
-   条件b: `editingStaffShiftField='end'`の場合、`endTime=value`で呼び出す。
-3. [GetSheetDetailUsecase.call](../../domain/usecases/get_sheet_detail_usecase.md)を`_sheetInstanceId`で呼び出し、変数`detail`に格納する。
-4. `status=success`・`sheetDetail=detail`・`editingStaffShiftId=null`・`editingStaffShiftField=null`とした状態を反映する。
+1. `editingStaffShiftId`・`editingStaffShiftField`をそれぞれ変数`shiftId`・`field`に格納する。\
+   条件a: いずれかが`null`（編集中でない）の場合、処理を終了する。\
+   条件b: いずれも`null`でない場合、次の手順へ進む。
+2. [normalizeHHmm](../../../../core/utils/time_format.md#normalizehhmm)を`value`で呼び出し、変数`time`に格納する。\
+   条件a: `time`が`null`（形式不正）の場合、手順5の編集状態の解除を行い、`cellInputFailed`（メッセージ: `時刻はHH:mm形式（例: 18:30）で入力してください`）を通知して処理を終了する（DBは更新しない）。\
+   条件b: `null`でない場合、次の手順へ進む。
+3. `sheetDetail.staffShifts`から`shiftId`に一致するシフトを取得し、変数`currentShift`に格納する。
+4. 条件a: `field='start'`の場合、[UpdateStaffShiftUsecase.call](../../domain/usecases/update_staff_shift_usecase.md)を`current=currentShift`・`startTime=time`で呼び出す。\
+   条件b: `field='end'`の場合、`endTime=time`で呼び出す。
+5. `editingStaffShiftId=shiftId`かつ`editingStaffShiftField=field`のままの場合のみ、`editingStaffShiftId=null`・`editingStaffShiftField=null`とした状態を反映する（保存待ちの間に別の時刻ボタンがタップされた場合は、その編集状態を維持する）。
+6. [GetSheetDetailUsecase.call](../../domain/usecases/get_sheet_detail_usecase.md)を`_sheetInstanceId`で呼び出し、変数`detail`に格納する。
+7. `status=success`・`sheetDetail=detail`とした状態を反映する。
+
+| 変数論理名 | 変数物理名 | データ型 | 格納値 | 備考 |
+|---|---|---|---|---|
+| 編集中シフトID | shiftId | string | `editingStaffShiftId` | - |
+| 編集中項目 | field | string | `editingStaffShiftField` | `'start'`または`'end'` |
+| 正規化済み時刻 | time | string（optional） | `normalizeHHmm(value)`の戻り値 | 例: `18:30`。形式不正の場合は`null`となり、手順2の条件aで処理を終了する |
+| 対象シフト | currentShift | StaffShift | `sheetDetail.staffShifts`の該当要素 | - |
 
 ## exportCsv
 
@@ -465,7 +480,7 @@ Error状態からの再試行。[load](#load)を再実行する。
 | 成功／success | 「担当」列プルダウン選択／「合計金額」列「P」「カ」トグル | 成功／success | [setRowStaff](#setrowstaff)／[setRowPaymentMethod](#setrowpaymentmethod)を実行し、成功時`sheetDetail`を再設定（`dailySummary`の再集計を含む）。失敗時は`cellInputFailed`副作用を発行 |
 | 成功／success | [VoucherStaffBar](../widgets/voucher_staff_bar.md)の氏名プルダウン選択／ドリンクバック入力確定 | 成功／success | [setStaffShiftName](#setstaffshiftname)／[setStaffShiftDrinkBack](#setstaffshiftdrinkback)を実行し、成功後`sheetDetail`を再設定 |
 | 成功／success | 就業時刻ボタンタップ | 成功／success | [startEditingStaffShiftTime](#starteditingstaffshifttime)で`editingStaffShiftId`・`editingStaffShiftField`を設定（状態自体は`success`のまま） |
-| 成功／success（シフト時刻編集中） | 時刻編集確定 | 成功／success | [commitStaffShiftTime](#commitstaffshifttime)を実行し、成功時`sheetDetail`を再設定して`editingStaffShiftId`等をクリア |
+| 成功／success（シフト時刻編集中） | 時刻編集確定（Enter／欄の外のタップ／フォーカスアウト） | 成功／success | [commitStaffShiftTime](#commitstaffshifttime)を実行し、成功時`sheetDetail`を再設定して`editingStaffShiftId`等をクリア。形式不正の場合は保存せず`editingStaffShiftId`等をクリアし`cellInputFailed`副作用を発行 |
 | 成功／success | CSV出力ボタン押下 | 成功／success | [exportCsv](#exportcsv)を実行し、`isExporting`を`true`→`false`に更新。結果は副作用で通知 |
 
 ## 副作用（Side Effect）仕様
@@ -473,5 +488,6 @@ Error状態からの再試行。[load](#load)を再実行する。
 | 契機 | 発行する[VoucherSheetEffect](./voucher_sheet_effect.md) | UI側の処理 |
 |---|---|---|
 | [addRow](#addrow)・[commitCell](#commitcell)・[setRowStaff](#setrowstaff)・[setRowPaymentMethod](#setrowpaymentmethod)の失敗 | `kind=cellInputFailed`, `message`=例外メッセージ | 画面上部に[NoticeBanner](../../../../core/widgets/notice_banner.md)（`tone=error`）でエラーメッセージを表示する |
+| [commitStaffShiftTime](#commitstaffshifttime)の入力値の形式不正・失敗 | `kind=cellInputFailed`, `message`=`時刻はHH:mm形式（例: 18:30）で入力してください`（形式不正時）または例外メッセージ | 画面上部に[NoticeBanner](../../../../core/widgets/notice_banner.md)（`tone=error`）でエラーメッセージを表示する |
 | [exportCsv](#exportcsv)の成功 | `kind=exportSucceeded`, `csvContent`=CSV文字列 | OS標準の共有シート（Share）を表示し、CSVファイルとして共有・保存できるようにする。あわせて画面上部に[NoticeBanner](../../../../core/widgets/notice_banner.md)（`tone=success`）で完了メッセージを表示する |
 | [exportCsv](#exportcsv)の失敗 | `kind=exportFailed`, `message`=例外メッセージ | 画面上部に[NoticeBanner](../../../../core/widgets/notice_banner.md)（`tone=error`）でエラーメッセージを表示する |

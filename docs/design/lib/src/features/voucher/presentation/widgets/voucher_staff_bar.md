@@ -6,6 +6,8 @@
 | 2026-09-28 | minamiyama | 就業時刻ボタンの現在時刻表示（`TimeOfDay.format`）が、ウィジェット自身の`BuildContext`ではなく`MediaQuery`祖先を持たないルート要素を参照しており実機/シミュレータ上で例外が発生していたバグを修正。ビルドメソッドに渡された`context`を内部の`_buildEntry`・`_timeButton`ヘルパーまで引き回すよう変更（表示仕様自体に変更はない） |
 | 2026-09-29 | minamiyama | 担当スタッフ（`shift.staffId`）が未定のシフト枠は、出退勤時刻ボタンを空白表示・編集不可に変更（[docs/ui/wireframe](../../../../../../../ui/wireframe/app.js)に合わせて反映） |
 | 2026-09-29 | minamiyama | [docs/ui/wireframe](../../../../../../../ui/wireframe/style.css)の`.staffbar__entry`を正として、シフトごとの各エントリを角丸の点線枠（`CustomPainter`による自前描画）で囲むよう変更 |
+| 2026-10-03 | minamiyama | 時刻入力欄がEnter（キーボードの完了）でしか確定されず、欄の外をタップすると未保存のまま現在時刻表示に戻っていた不具合を修正。入力欄を`_StaffTimeField`として切り出し、欄の外のタップ・フォーカス喪失でも確定するよう変更（[docs/ui/wireframe](../../../../../../../ui/wireframe/app.js)の`change`・`blur`での確定に合わせる）。現在時刻の表示を端末の12/24時間表記設定に依存しない[formatHHmm](../../../../core/utils/time_format.md#formathhmm)に変更し、`_timeButton`への`context`の引き回しを廃止 |
+| 2026-10-03 | minamiyama | ドリンクバック入力欄がEnterでしか確定されず、再描画のたびに入力欄が作り直されていた不具合を修正。`_DrinkBackField`として切り出し、自由記述（string型）のまま、欄の外のタップ・フォーカス喪失でも変更がある場合に確定するよう変更 |
 
 ## 概要
 
@@ -37,6 +39,8 @@ classDiagram
 
 - 担当スタッフ（`shift.staffId`）が未定（`null`）の場合、就業開始/終了時刻ボタンは空白表示とし、タップによる編集を受け付けない（氏名選択後に初めて時刻の入力・修正が可能になる）。
 - 担当スタッフが選択済みの場合、就業開始/終了時刻ボタンは`shift.startTime`/`shift.endTime`が`null`のとき現在時刻（`HH:mm`）を表示する（保存値ではなく表示上の初期値。値を確定するまでDBには反映しない）。
-- `editingStaffShiftId`が対象シフトの`shiftId`と一致し、かつ`editingStaffShiftField`が対象項目と一致する場合のみ、ボタンの代わりに時刻入力欄を表示する。
+- `editingStaffShiftId`が対象シフトの`shiftId`と一致し、かつ`editingStaffShiftField`が対象項目と一致する場合のみ、ボタンの代わりに時刻入力欄（`_StaffTimeField`）を表示する。入力欄の初期値はボタンの表示値（保存値、未入力時は現在時刻）とする。
+- 時刻入力欄は、Enter（キーボードの完了）・欄の外のタップ・フォーカス喪失のいずれかで、入力欄の値を`onTimeCommit`に渡して確定する（1回の編集につき確定は1回のみ）。
+- ドリンクバック入力欄（`_DrinkBackField`）は自由記述（string型）として入力値をそのまま扱う（形式チェック・変換は行わない）。Enter・欄の外のタップ・フォーカス喪失のいずれかで、`shift.drinkBack`（保存済みの値、未入力時は空文字列）から変更がある場合のみ`onDrinkBackCommit`に渡して確定する。入力中でない間に保存済みの値が変化した場合（再読込など）は入力欄に反映する。シフトごとに`shiftId`をキーとして入力欄を区別する。
 - 横スクロールが発生する画面幅でも欄全体が視認できるよう、内部を横スクロール可能なコンテナとして実装する。
 - シフトごとのエントリ（氏名プルダウン〜ドリンクバック入力欄）は、角丸・点線（`colorScheme.outlineVariant`）の枠で囲む。
