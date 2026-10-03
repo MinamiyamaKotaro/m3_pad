@@ -4,11 +4,12 @@ import 'package:flutter/material.dart';
 import '../../domain/entities/header.dart';
 import '../../domain/entities/sheet_cell.dart';
 
-/// 伝票入力画面のグリッド内で1セル分の入力を表すウィジェット。
+/// 伝票入力画面のグリッド内で、MEMO列（`isPriced=false`の列）の1セル分の
+/// 入力を表すウィジェット。
 ///
-/// 列（[Header]）の`isPriced=true`（MEMO以外）の場合は数量の増減ボタン
-/// （スピンボタン）、`false`（MEMO列）の場合はタップして編集するテキスト
-/// 入力を表示する。
+/// タップして編集するテキスト入力を表示する。価格対象の列の個数セルは、
+/// 同額の列のグループ単位で[VoucherQuantityCell](./voucher_quantity_cell.dart)
+/// が表示する。
 class VoucherCellField extends StatelessWidget {
   /// [VoucherCellField] を生成する。
   const VoucherCellField({
@@ -22,7 +23,7 @@ class VoucherCellField extends StatelessWidget {
     this.editingText,
   });
 
-  /// 列。`isPriced`で入力方式を切り替える。
+  /// 列（MEMO列）。
   final Header header;
 
   /// セル。未入力の場合は`null`。
@@ -60,10 +61,6 @@ class VoucherCellField extends StatelessWidget {
 
   @override
   Widget build(final BuildContext context) {
-    if (header.isPriced) {
-      return _buildStepper(context);
-    }
-
     if (isEditing) {
       return TextFormField(
         autofocus: true,
@@ -92,62 +89,5 @@ class VoucherCellField extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  /// 数量の増減ボタン（スピンボタン）を表示する。`isPriced=true`の列
-  /// （MEMO以外）でのみ使用する。96px幅のセルに収まるよう、ボタンは
-  /// [IconButton]（既定でも48px四方のタップ領域を確保しようとする）では
-  /// なく固定サイズの[InkWell]で実装する。
-  Widget _buildStepper(final BuildContext context) {
-    final int quantity = cell?.quantity ?? 0;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: <Widget>[
-        _stepperButton(
-          context,
-          icon: Icons.remove,
-          onPressed: quantity > 0 ? () => _updateQuantity(quantity - 1) : null,
-        ),
-        SizedBox(
-          width: 18,
-          child: Text(
-            '$quantity',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.labelSmall,
-          ),
-        ),
-        _stepperButton(
-          context,
-          icon: Icons.add,
-          onPressed: () => _updateQuantity(quantity + 1),
-        ),
-      ],
-    );
-  }
-
-  Widget _stepperButton(
-    final BuildContext context, {
-    required final IconData icon,
-    required final VoidCallback? onPressed,
-  }) {
-    final Color color = onPressed == null
-        ? Theme.of(context).disabledColor
-        : Theme.of(context).colorScheme.primary;
-    return SizedBox(
-      width: 18,
-      height: 18,
-      child: InkWell(
-        onTap: onPressed,
-        child: Icon(icon, size: 12, color: color),
-      ),
-    );
-  }
-
-  /// タップ→値変更→確定の順にコールバックを呼び出し、数量を[next]に
-  /// 更新する。
-  void _updateQuantity(final int next) {
-    onTap();
-    onChanged(next.toString());
-    onSubmitted();
   }
 }

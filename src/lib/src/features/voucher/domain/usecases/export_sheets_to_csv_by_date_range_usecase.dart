@@ -1,17 +1,20 @@
 import '../../../../core/errors/validation_exception.dart';
 import '../entities/customer.dart';
 import '../entities/header.dart';
+import '../entities/header_price.dart';
 import '../entities/sheet_cell.dart';
 import '../entities/sheet_instance.dart';
 import '../entities/sheet_row.dart';
 import '../entities/staff.dart';
 import '../repositories/customer_repository.dart';
+import '../repositories/header_price_repository.dart';
 import '../repositories/header_repository.dart';
 import '../repositories/sheet_cell_repository.dart';
 import '../repositories/sheet_instance_repository.dart';
 import '../repositories/sheet_row_repository.dart';
 import '../repositories/staff_repository.dart';
 import 'csv_sheet_formatter.dart';
+import 'header_grouping.dart';
 
 /// 指定した期間（開始日〜終了日）に含まれる全ての伝票インスタンスを、1つの
 /// CSV文字列としてまとめて出力するユースケース（FR-3）。
@@ -29,12 +32,14 @@ class ExportSheetsToCsvByDateRangeUsecase {
     required final SheetCellRepository cellRepository,
     required final CustomerRepository customerRepository,
     required final StaffRepository staffRepository,
+    required final HeaderPriceRepository headerPriceRepository,
   })  : _instanceRepository = instanceRepository,
         _headerRepository = headerRepository,
         _rowRepository = rowRepository,
         _cellRepository = cellRepository,
         _customerRepository = customerRepository,
-        _staffRepository = staffRepository;
+        _staffRepository = staffRepository,
+        _headerPriceRepository = headerPriceRepository;
 
   final SheetInstanceRepository _instanceRepository;
   final HeaderRepository _headerRepository;
@@ -42,6 +47,7 @@ class ExportSheetsToCsvByDateRangeUsecase {
   final SheetCellRepository _cellRepository;
   final CustomerRepository _customerRepository;
   final StaffRepository _staffRepository;
+  final HeaderPriceRepository _headerPriceRepository;
 
   /// 指定した伝票フォーマット（[sheetTemplateId]）の[from]〜[to]（両端含む）
   /// の営業日分をCSV文字列として出力する。
@@ -72,6 +78,20 @@ class ExportSheetsToCsvByDateRangeUsecase {
 
     final List<Header> headers = await _headerRepository.findByTemplateId(
       sheetTemplateId,
+    );
+    // 伝票入力画面と同じく、同額の列を1グループとして1列に出力する。
+    // グルーピングは終了日（[to]）時点の単価で行う。
+    final List<String> pricedColumnIds = headers
+        .where((final Header header) => header.isPriced)
+        .map((final Header header) => header.columnId)
+        .toList();
+    final List<HeaderPrice> prices =
+        await _headerPriceRepository.findCurrentPrices(pricedColumnIds, to);
+    final List<List<Header>> headerGroups = groupHeadersByPrice(
+      headers,
+      <String, int>{
+        for (final HeaderPrice price in prices) price.columnId: price.price,
+      },
     );
 
     final List<String> instanceIds = instances
@@ -108,7 +128,7 @@ class ExportSheetsToCsvByDateRangeUsecase {
           (final SheetRow row) => csvRowLine(
             instance: instanceById[row.sheetInstanceId]!,
             row: row,
-            headers: headers,
+            headerGroups: headerGroups,
             cellByRowAndColumn: cellByRowAndColumn,
             customersById: customersById,
             staffById: staffById,
@@ -116,6 +136,9 @@ class ExportSheetsToCsvByDateRangeUsecase {
         )
         .toList();
 
-    return <String>[csvHeaderLine(headers).join(','), ...rowLines].join('\n');
+    return <String>[
+      csvHeaderLine(headerGroups).join(','),
+      ...rowLines,
+    ].join('\n');
   }
 }

@@ -299,6 +299,7 @@ final Provider<ExportDailySheetToCsvUsecase>
     cellRepository: ref.watch(sheetCellRepositoryProvider),
     customerRepository: ref.watch(customerRepositoryProvider),
     staffRepository: ref.watch(staffRepositoryProvider),
+    headerPriceRepository: ref.watch(headerPriceRepositoryProvider),
   ),
 );
 
@@ -313,6 +314,7 @@ final Provider<ExportSheetsToCsvByDateRangeUsecase>
     cellRepository: ref.watch(sheetCellRepositoryProvider),
     customerRepository: ref.watch(customerRepositoryProvider),
     staffRepository: ref.watch(staffRepositoryProvider),
+    headerPriceRepository: ref.watch(headerPriceRepositoryProvider),
   ),
 );
 

@@ -8,6 +8,7 @@ import 'package:m3_pad/src/features/voucher/domain/entities/sheet_instance.dart'
 import 'package:m3_pad/src/features/voucher/domain/entities/sheet_row.dart';
 import 'package:m3_pad/src/features/voucher/domain/entities/staff.dart';
 import 'package:m3_pad/src/features/voucher/domain/repositories/customer_repository.dart';
+import 'package:m3_pad/src/features/voucher/domain/repositories/header_price_repository.dart';
 import 'package:m3_pad/src/features/voucher/domain/repositories/header_repository.dart';
 import 'package:m3_pad/src/features/voucher/domain/repositories/sheet_cell_repository.dart';
 import 'package:m3_pad/src/features/voucher/domain/repositories/sheet_instance_repository.dart';
@@ -26,6 +27,7 @@ import 'export_sheets_to_csv_by_date_range_usecase_test.mocks.dart';
   MockSpec<SheetCellRepository>(),
   MockSpec<CustomerRepository>(),
   MockSpec<StaffRepository>(),
+  MockSpec<HeaderPriceRepository>(),
 ])
 void main() {
   group('ExportSheetsToCsvByDateRangeUsecase', () {
@@ -35,6 +37,7 @@ void main() {
     late MockSheetCellRepository cellRepository;
     late MockCustomerRepository customerRepository;
     late MockStaffRepository staffRepository;
+    late MockHeaderPriceRepository headerPriceRepository;
     late ExportSheetsToCsvByDateRangeUsecase usecase;
 
     final DateTime day1 = DateTime(2026, 9);
@@ -94,6 +97,7 @@ void main() {
       cellRepository = MockSheetCellRepository();
       customerRepository = MockCustomerRepository();
       staffRepository = MockStaffRepository();
+      headerPriceRepository = MockHeaderPriceRepository();
       usecase = ExportSheetsToCsvByDateRangeUsecase(
         instanceRepository: instanceRepository,
         headerRepository: headerRepository,
@@ -101,6 +105,7 @@ void main() {
         cellRepository: cellRepository,
         customerRepository: customerRepository,
         staffRepository: staffRepository,
+        headerPriceRepository: headerPriceRepository,
       );
 
       when(headerRepository.findByTemplateId('template-1')).thenAnswer(

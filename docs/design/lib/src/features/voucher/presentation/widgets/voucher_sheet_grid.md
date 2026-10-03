@@ -8,6 +8,7 @@
 | 2026-09-29 | minamiyama | ヘッダー管理機能（FR-6）の表示/非表示（`Header.isVisible`）に対応するため、`_visibleHeaders`（`widget.headers`から`isVisible=true`のみを抽出したリスト）を追加。[VoucherHeaderRow](./voucher_header_row.md)への列一覧の受け渡し、価格列＋MEMO列領域の描画幅（`middleWidth`）・各行のセル一覧（`_priceCellsFor`）を`_visibleHeaders`基準に変更し、非表示列は列として描画しないようにした。行の高さ算出（`_computeRowHeights`）・合計金額計算・CSV出力は引き続き全列（非表示含む）を対象とするロジック側で行うため、非表示列のセルデータ・金額計算には影響しない |
 | 2026-09-29 | minamiyama | 現在の単価が同額の列が元々隣接していない場合にグルーピング表示（[VoucherHeaderRow](./voucher_header_row.md)）が成立していなかった不具合を修正するため、`_visibleHeaders`に同額の価格対象列を隣接させる並べ替え（`_groupByPrice`、価格ごとの初出順を保つ安定グルーピング）を追加。あわせて、非価格対象の列（MEMO）を常に価格対象の列より後ろに描画するようにし、ヘッダー管理画面での列追加によりMEMOより後ろに新しい列が描画されないようにした |
 | 2026-09-29 | minamiyama | 「お名前」「合計金額」「担当」のヘッダー見出しを太字（`FontWeight.bold`）表示に変更（[VoucherHeaderRow](./voucher_header_row.md)側の列名太字化と合わせ、全ヘッダー見出しを太字に統一） |
+| 2026-10-03 | minamiyama | 個数セルを同額の列のグループにつき1つにするため、`_visibleHeaders`・`_groupByPrice`を`_visibleHeaderGroups`（[groupHeadersByPrice](../../domain/usecases/header_grouping.md#groupheadersbyprice)を使用）に置き換え。価格対象のグループは[VoucherQuantityCell](./voucher_quantity_cell.md)を1つ（幅`96px × グループ内列数`）描画し、個数はグループの先頭の列（代表列）に保存する。MEMO列は引き続き[VoucherCellField](./voucher_cell_field.md)で描画する |
 
 ## 概要
 
@@ -27,7 +28,8 @@ classDiagram
     VoucherSheetPage --> VoucherSheetGrid : uses
     VoucherSheetGrid --> VoucherHeaderRow : uses
     VoucherSheetGrid --> VoucherNameCell : uses
-    VoucherSheetGrid --> VoucherCellField : uses
+    VoucherSheetGrid --> VoucherCellField : uses（MEMO列）
+    VoucherSheetGrid --> VoucherQuantityCell : uses（価格対象のグループ）
     VoucherSheetGrid --> VoucherTotalCell : uses
     VoucherSheetGrid --> VoucherStaffSelectCell : uses
     VoucherSheetGrid --> VoucherAddRowButton : uses
@@ -77,13 +79,22 @@ Flutterには表組みの一部の行・列のみを固定表示するCSSの`pos
 
 ## 表示対象の列と描画順（非表示列の除外・同額グルーピング・MEMO末尾固定）
 
-`_visibleHeaders`は、以下の手順で表示・描画順の列一覧を組み立てる。
+`_visibleHeaderGroups`は、以下の手順で表示・描画順の列グループ一覧を組み立てる。
 
 1. `widget.headers`のうち`isVisible=true`の列のみを対象とする。`isVisible=false`の列は伝票グリッド上に列として表示しないが、既存セルの数量・単価データは保持されたままであり、合計金額（`SheetRow.totalAmount`、DBトリガーで自動更新）やCSV出力（[ExportDailySheetToCsvUsecase](../../domain/usecases/export_daily_sheet_to_csv_usecase.md)）は全列（非表示含む）を対象に計算するため、表示のON/OFFのみで金額に影響を与えない。
-2. 価格対象の列（`isPriced=true`）を、`_groupByPrice`で現在の単価（`widget.unitPricesByColumnId`）が同額のものが隣接するよう並べ替える。価格ごとの初出順を保つ安定グルーピングとし、単価未登録の列は元の位置を保つ。これにより、元々離れた位置にあった同額の列（例:「二階堂・だいやめ」と「黒霧島」がともに700円）も[VoucherHeaderRow](./voucher_header_row.md)側で1セルにまとめて表示できる。
-3. 非価格対象の列（MEMO）は、常に2.の結果より後ろに描画する。ヘッダー管理画面（FR-6）で列を追加すると`displayOrder`はMEMOより後ろになるため、`displayOrder`のみに従うとMEMOの後ろに新しい列が描画されてしまう。これを避けるため、描画順では非価格対象の列を常に末尾に固定する。
+2. [groupHeadersByPrice](../../domain/usecases/header_grouping.md#groupheadersbyprice)で、現在の単価（`widget.unitPricesByColumnId`）が同額の価格対象の列を1グループにまとめる（価格ごとの初出順、単価未登録の列は単独グループで元の位置を保つ）。これにより、元々離れた位置にあった同額の列（例:「二階堂・だいやめ」と「黒霧島」がともに700円）も1グループになる。
+3. 非価格対象の列（MEMO）は、常に価格対象のグループより後ろに単独グループとして並ぶ（ヘッダー管理画面での列追加により`displayOrder`がMEMOより後ろになっても、MEMOの後ろに新しい列が描画されない）。
 
-`_visibleHeaders`は[VoucherHeaderRow](./voucher_header_row.md)への列一覧・価格列＋MEMO列領域の描画幅（`middleWidth`）・各行のセル一覧（`_priceCellsFor`）のいずれにも共通で用いるため、ヘッダー行とデータ行の列の並びは常に一致する。
+`_visibleHeaderGroups`は[VoucherHeaderRow](./voucher_header_row.md)への列グループ一覧・価格列＋MEMO列領域の描画幅（`middleWidth`＝`96px × 全グループの列数の合計`）・各行のセル一覧（`_priceCellsFor`）のいずれにも共通で用いるため、ヘッダー行とデータ行のグループの並び・幅は常に一致する。
+
+## 個数セル（同額の列のグループにつき1つ）
+
+- 価格対象のグループごとに[VoucherQuantityCell](./voucher_quantity_cell.md)を1つ、幅`96px × グループ内列数`で描画する（`_quantityCellFor`）。
+- 表示する個数は、グループ内の各列のセルの個数（`SheetCell.quantity`）の合計とする（価格改定でグループ構成が変わった場合や、グループ化前に先頭以外の列へ入力された個数も含めるため）。
+- 「＋」押下時は、グループの先頭の列（代表列）の個数を1増やす。
+- 「-」押下時は、代表列の個数が1以上なら代表列、0ならグループ内で個数が1以上の最初の列の個数を1減らす。グループ内の個数の合計が0の場合は「-」を無効化する。
+- 個数の更新は`_commitQuantity`で、対象の列について`onCellTap`（初期テキストに更新後の個数）→`onTextChanged`（更新後の個数）→`onCommit`の順に呼び出して即時確定する（[VoucherSheetNotifier.commitCell](../controllers/voucher_sheet_notifier.md#commitcell)で保存）。
+- 同額のグループのため、どの列に個数を保存しても合計金額は変わらない。
 
 ## 「行を追加」ボタンの配置
 

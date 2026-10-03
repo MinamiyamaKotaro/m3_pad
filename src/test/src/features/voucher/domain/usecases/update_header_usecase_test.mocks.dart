@@ -195,6 +195,25 @@ class MockHeaderPriceRepository extends _i1.Mock
       ) as _i5.Future<_i3.HeaderPrice>);
 
   @override
+  _i5.Future<List<_i3.HeaderPrice>> findCurrentPrices(
+    List<String>? columnIds,
+    DateTime? targetDate,
+  ) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #findCurrentPrices,
+          [
+            columnIds,
+            targetDate,
+          ],
+        ),
+        returnValue:
+            _i5.Future<List<_i3.HeaderPrice>>.value(<_i3.HeaderPrice>[]),
+        returnValueForMissingStub:
+            _i5.Future<List<_i3.HeaderPrice>>.value(<_i3.HeaderPrice>[]),
+      ) as _i5.Future<List<_i3.HeaderPrice>>);
+
+  @override
   _i5.Future<void> closeCurrentPrice(
     String? priceId,
     DateTime? effectiveTo,

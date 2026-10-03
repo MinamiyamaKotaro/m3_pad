@@ -4,32 +4,36 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 
-import 'dart:async' as _i8;
+import 'dart:async' as _i9;
 
 import 'package:m3_pad/src/features/voucher/domain/entities/customer.dart'
     as _i5;
 import 'package:m3_pad/src/features/voucher/domain/entities/enums/enums.dart'
-    as _i10;
+    as _i11;
 import 'package:m3_pad/src/features/voucher/domain/entities/header.dart' as _i3;
+import 'package:m3_pad/src/features/voucher/domain/entities/header_price.dart'
+    as _i7;
 import 'package:m3_pad/src/features/voucher/domain/entities/sheet_cell.dart'
-    as _i13;
+    as _i14;
 import 'package:m3_pad/src/features/voucher/domain/entities/sheet_instance.dart'
     as _i2;
 import 'package:m3_pad/src/features/voucher/domain/entities/sheet_row.dart'
     as _i4;
 import 'package:m3_pad/src/features/voucher/domain/entities/staff.dart' as _i6;
 import 'package:m3_pad/src/features/voucher/domain/repositories/customer_repository.dart'
-    as _i14;
-import 'package:m3_pad/src/features/voucher/domain/repositories/header_repository.dart'
-    as _i9;
-import 'package:m3_pad/src/features/voucher/domain/repositories/sheet_cell_repository.dart'
-    as _i12;
-import 'package:m3_pad/src/features/voucher/domain/repositories/sheet_instance_repository.dart'
-    as _i7;
-import 'package:m3_pad/src/features/voucher/domain/repositories/sheet_row_repository.dart'
-    as _i11;
-import 'package:m3_pad/src/features/voucher/domain/repositories/staff_repository.dart'
     as _i15;
+import 'package:m3_pad/src/features/voucher/domain/repositories/header_price_repository.dart'
+    as _i17;
+import 'package:m3_pad/src/features/voucher/domain/repositories/header_repository.dart'
+    as _i10;
+import 'package:m3_pad/src/features/voucher/domain/repositories/sheet_cell_repository.dart'
+    as _i13;
+import 'package:m3_pad/src/features/voucher/domain/repositories/sheet_instance_repository.dart'
+    as _i8;
+import 'package:m3_pad/src/features/voucher/domain/repositories/sheet_row_repository.dart'
+    as _i12;
+import 'package:m3_pad/src/features/voucher/domain/repositories/staff_repository.dart'
+    as _i16;
 import 'package:mockito/mockito.dart' as _i1;
 
 // ignore_for_file: type=lint
@@ -98,29 +102,39 @@ class _FakeStaff_4 extends _i1.SmartFake implements _i6.Staff {
         );
 }
 
+class _FakeHeaderPrice_5 extends _i1.SmartFake implements _i7.HeaderPrice {
+  _FakeHeaderPrice_5(
+    Object parent,
+    Invocation parentInvocation,
+  ) : super(
+          parent,
+          parentInvocation,
+        );
+}
+
 /// A class which mocks [SheetInstanceRepository].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockSheetInstanceRepository extends _i1.Mock
-    implements _i7.SheetInstanceRepository {
+    implements _i8.SheetInstanceRepository {
   @override
-  _i8.Future<void> insert(_i2.SheetInstance? instance) => (super.noSuchMethod(
+  _i9.Future<void> insert(_i2.SheetInstance? instance) => (super.noSuchMethod(
         Invocation.method(
           #insert,
           [instance],
         ),
-        returnValue: _i8.Future<void>.value(),
-        returnValueForMissingStub: _i8.Future<void>.value(),
-      ) as _i8.Future<void>);
+        returnValue: _i9.Future<void>.value(),
+        returnValueForMissingStub: _i9.Future<void>.value(),
+      ) as _i9.Future<void>);
 
   @override
-  _i8.Future<_i2.SheetInstance> findById(String? sheetInstanceId) =>
+  _i9.Future<_i2.SheetInstance> findById(String? sheetInstanceId) =>
       (super.noSuchMethod(
         Invocation.method(
           #findById,
           [sheetInstanceId],
         ),
-        returnValue: _i8.Future<_i2.SheetInstance>.value(_FakeSheetInstance_0(
+        returnValue: _i9.Future<_i2.SheetInstance>.value(_FakeSheetInstance_0(
           this,
           Invocation.method(
             #findById,
@@ -128,17 +142,17 @@ class MockSheetInstanceRepository extends _i1.Mock
           ),
         )),
         returnValueForMissingStub:
-            _i8.Future<_i2.SheetInstance>.value(_FakeSheetInstance_0(
+            _i9.Future<_i2.SheetInstance>.value(_FakeSheetInstance_0(
           this,
           Invocation.method(
             #findById,
             [sheetInstanceId],
           ),
         )),
-      ) as _i8.Future<_i2.SheetInstance>);
+      ) as _i9.Future<_i2.SheetInstance>);
 
   @override
-  _i8.Future<_i2.SheetInstance?> findByTemplateAndDate(
+  _i9.Future<_i2.SheetInstance?> findByTemplateAndDate(
     String? sheetTemplateId,
     DateTime? businessDate,
   ) =>
@@ -150,12 +164,12 @@ class MockSheetInstanceRepository extends _i1.Mock
             businessDate,
           ],
         ),
-        returnValue: _i8.Future<_i2.SheetInstance?>.value(),
-        returnValueForMissingStub: _i8.Future<_i2.SheetInstance?>.value(),
-      ) as _i8.Future<_i2.SheetInstance?>);
+        returnValue: _i9.Future<_i2.SheetInstance?>.value(),
+        returnValueForMissingStub: _i9.Future<_i2.SheetInstance?>.value(),
+      ) as _i9.Future<_i2.SheetInstance?>);
 
   @override
-  _i8.Future<List<_i2.SheetInstance>> findByTemplateIdAndDateRange(
+  _i9.Future<List<_i2.SheetInstance>> findByTemplateIdAndDateRange(
     String? sheetTemplateId,
     DateTime? from,
     DateTime? to,
@@ -170,86 +184,86 @@ class MockSheetInstanceRepository extends _i1.Mock
           ],
         ),
         returnValue:
-            _i8.Future<List<_i2.SheetInstance>>.value(<_i2.SheetInstance>[]),
+            _i9.Future<List<_i2.SheetInstance>>.value(<_i2.SheetInstance>[]),
         returnValueForMissingStub:
-            _i8.Future<List<_i2.SheetInstance>>.value(<_i2.SheetInstance>[]),
-      ) as _i8.Future<List<_i2.SheetInstance>>);
+            _i9.Future<List<_i2.SheetInstance>>.value(<_i2.SheetInstance>[]),
+      ) as _i9.Future<List<_i2.SheetInstance>>);
 }
 
 /// A class which mocks [HeaderRepository].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockHeaderRepository extends _i1.Mock implements _i9.HeaderRepository {
+class MockHeaderRepository extends _i1.Mock implements _i10.HeaderRepository {
   @override
-  _i8.Future<void> insert(_i3.Header? header) => (super.noSuchMethod(
+  _i9.Future<void> insert(_i3.Header? header) => (super.noSuchMethod(
         Invocation.method(
           #insert,
           [header],
         ),
-        returnValue: _i8.Future<void>.value(),
-        returnValueForMissingStub: _i8.Future<void>.value(),
-      ) as _i8.Future<void>);
+        returnValue: _i9.Future<void>.value(),
+        returnValueForMissingStub: _i9.Future<void>.value(),
+      ) as _i9.Future<void>);
 
   @override
-  _i8.Future<_i3.Header> findById(String? columnId) => (super.noSuchMethod(
+  _i9.Future<_i3.Header> findById(String? columnId) => (super.noSuchMethod(
         Invocation.method(
           #findById,
           [columnId],
         ),
-        returnValue: _i8.Future<_i3.Header>.value(_FakeHeader_1(
+        returnValue: _i9.Future<_i3.Header>.value(_FakeHeader_1(
           this,
           Invocation.method(
             #findById,
             [columnId],
           ),
         )),
-        returnValueForMissingStub: _i8.Future<_i3.Header>.value(_FakeHeader_1(
+        returnValueForMissingStub: _i9.Future<_i3.Header>.value(_FakeHeader_1(
           this,
           Invocation.method(
             #findById,
             [columnId],
           ),
         )),
-      ) as _i8.Future<_i3.Header>);
+      ) as _i9.Future<_i3.Header>);
 
   @override
-  _i8.Future<List<_i3.Header>> findByTemplateId(String? sheetTemplateId) =>
+  _i9.Future<List<_i3.Header>> findByTemplateId(String? sheetTemplateId) =>
       (super.noSuchMethod(
         Invocation.method(
           #findByTemplateId,
           [sheetTemplateId],
         ),
-        returnValue: _i8.Future<List<_i3.Header>>.value(<_i3.Header>[]),
+        returnValue: _i9.Future<List<_i3.Header>>.value(<_i3.Header>[]),
         returnValueForMissingStub:
-            _i8.Future<List<_i3.Header>>.value(<_i3.Header>[]),
-      ) as _i8.Future<List<_i3.Header>>);
+            _i9.Future<List<_i3.Header>>.value(<_i3.Header>[]),
+      ) as _i9.Future<List<_i3.Header>>);
 
   @override
-  _i8.Future<void> update(_i3.Header? header) => (super.noSuchMethod(
+  _i9.Future<void> update(_i3.Header? header) => (super.noSuchMethod(
         Invocation.method(
           #update,
           [header],
         ),
-        returnValue: _i8.Future<void>.value(),
-        returnValueForMissingStub: _i8.Future<void>.value(),
-      ) as _i8.Future<void>);
+        returnValue: _i9.Future<void>.value(),
+        returnValueForMissingStub: _i9.Future<void>.value(),
+      ) as _i9.Future<void>);
 
   @override
-  _i8.Future<void> updateDisplayOrders(
+  _i9.Future<void> updateDisplayOrders(
           Map<String, int>? displayOrderByColumnId) =>
       (super.noSuchMethod(
         Invocation.method(
           #updateDisplayOrders,
           [displayOrderByColumnId],
         ),
-        returnValue: _i8.Future<void>.value(),
-        returnValueForMissingStub: _i8.Future<void>.value(),
-      ) as _i8.Future<void>);
+        returnValue: _i9.Future<void>.value(),
+        returnValueForMissingStub: _i9.Future<void>.value(),
+      ) as _i9.Future<void>);
 
   @override
-  _i8.Future<void> updateStatus(
+  _i9.Future<void> updateStatus(
     String? columnId,
-    _i10.RecordStatus? status,
+    _i11.RecordStatus? status,
   ) =>
       (super.noSuchMethod(
         Invocation.method(
@@ -259,43 +273,43 @@ class MockHeaderRepository extends _i1.Mock implements _i9.HeaderRepository {
             status,
           ],
         ),
-        returnValue: _i8.Future<void>.value(),
-        returnValueForMissingStub: _i8.Future<void>.value(),
-      ) as _i8.Future<void>);
+        returnValue: _i9.Future<void>.value(),
+        returnValueForMissingStub: _i9.Future<void>.value(),
+      ) as _i9.Future<void>);
 }
 
 /// A class which mocks [SheetRowRepository].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockSheetRowRepository extends _i1.Mock
-    implements _i11.SheetRowRepository {
+    implements _i12.SheetRowRepository {
   @override
-  _i8.Future<void> insert(_i4.SheetRow? row) => (super.noSuchMethod(
+  _i9.Future<void> insert(_i4.SheetRow? row) => (super.noSuchMethod(
         Invocation.method(
           #insert,
           [row],
         ),
-        returnValue: _i8.Future<void>.value(),
-        returnValueForMissingStub: _i8.Future<void>.value(),
-      ) as _i8.Future<void>);
+        returnValue: _i9.Future<void>.value(),
+        returnValueForMissingStub: _i9.Future<void>.value(),
+      ) as _i9.Future<void>);
 
   @override
-  _i8.Future<void> update(_i4.SheetRow? row) => (super.noSuchMethod(
+  _i9.Future<void> update(_i4.SheetRow? row) => (super.noSuchMethod(
         Invocation.method(
           #update,
           [row],
         ),
-        returnValue: _i8.Future<void>.value(),
-        returnValueForMissingStub: _i8.Future<void>.value(),
-      ) as _i8.Future<void>);
+        returnValue: _i9.Future<void>.value(),
+        returnValueForMissingStub: _i9.Future<void>.value(),
+      ) as _i9.Future<void>);
 
   @override
-  _i8.Future<_i4.SheetRow> findById(String? rowId) => (super.noSuchMethod(
+  _i9.Future<_i4.SheetRow> findById(String? rowId) => (super.noSuchMethod(
         Invocation.method(
           #findById,
           [rowId],
         ),
-        returnValue: _i8.Future<_i4.SheetRow>.value(_FakeSheetRow_2(
+        returnValue: _i9.Future<_i4.SheetRow>.value(_FakeSheetRow_2(
           this,
           Invocation.method(
             #findById,
@@ -303,59 +317,59 @@ class MockSheetRowRepository extends _i1.Mock
           ),
         )),
         returnValueForMissingStub:
-            _i8.Future<_i4.SheetRow>.value(_FakeSheetRow_2(
+            _i9.Future<_i4.SheetRow>.value(_FakeSheetRow_2(
           this,
           Invocation.method(
             #findById,
             [rowId],
           ),
         )),
-      ) as _i8.Future<_i4.SheetRow>);
+      ) as _i9.Future<_i4.SheetRow>);
 
   @override
-  _i8.Future<int> findMaxRowOrder(String? sheetInstanceId) =>
+  _i9.Future<int> findMaxRowOrder(String? sheetInstanceId) =>
       (super.noSuchMethod(
         Invocation.method(
           #findMaxRowOrder,
           [sheetInstanceId],
         ),
-        returnValue: _i8.Future<int>.value(0),
-        returnValueForMissingStub: _i8.Future<int>.value(0),
-      ) as _i8.Future<int>);
+        returnValue: _i9.Future<int>.value(0),
+        returnValueForMissingStub: _i9.Future<int>.value(0),
+      ) as _i9.Future<int>);
 
   @override
-  _i8.Future<List<_i4.SheetRow>> findByInstanceId(String? sheetInstanceId) =>
+  _i9.Future<List<_i4.SheetRow>> findByInstanceId(String? sheetInstanceId) =>
       (super.noSuchMethod(
         Invocation.method(
           #findByInstanceId,
           [sheetInstanceId],
         ),
-        returnValue: _i8.Future<List<_i4.SheetRow>>.value(<_i4.SheetRow>[]),
+        returnValue: _i9.Future<List<_i4.SheetRow>>.value(<_i4.SheetRow>[]),
         returnValueForMissingStub:
-            _i8.Future<List<_i4.SheetRow>>.value(<_i4.SheetRow>[]),
-      ) as _i8.Future<List<_i4.SheetRow>>);
+            _i9.Future<List<_i4.SheetRow>>.value(<_i4.SheetRow>[]),
+      ) as _i9.Future<List<_i4.SheetRow>>);
 
   @override
-  _i8.Future<List<_i4.SheetRow>> findByInstanceIds(
+  _i9.Future<List<_i4.SheetRow>> findByInstanceIds(
           List<String>? sheetInstanceIds) =>
       (super.noSuchMethod(
         Invocation.method(
           #findByInstanceIds,
           [sheetInstanceIds],
         ),
-        returnValue: _i8.Future<List<_i4.SheetRow>>.value(<_i4.SheetRow>[]),
+        returnValue: _i9.Future<List<_i4.SheetRow>>.value(<_i4.SheetRow>[]),
         returnValueForMissingStub:
-            _i8.Future<List<_i4.SheetRow>>.value(<_i4.SheetRow>[]),
-      ) as _i8.Future<List<_i4.SheetRow>>);
+            _i9.Future<List<_i4.SheetRow>>.value(<_i4.SheetRow>[]),
+      ) as _i9.Future<List<_i4.SheetRow>>);
 }
 
 /// A class which mocks [SheetCellRepository].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockSheetCellRepository extends _i1.Mock
-    implements _i12.SheetCellRepository {
+    implements _i13.SheetCellRepository {
   @override
-  _i8.Future<_i13.SheetCell?> findByRowAndColumn(
+  _i9.Future<_i14.SheetCell?> findByRowAndColumn(
     String? rowId,
     String? columnId,
   ) =>
@@ -367,77 +381,77 @@ class MockSheetCellRepository extends _i1.Mock
             columnId,
           ],
         ),
-        returnValue: _i8.Future<_i13.SheetCell?>.value(),
-        returnValueForMissingStub: _i8.Future<_i13.SheetCell?>.value(),
-      ) as _i8.Future<_i13.SheetCell?>);
+        returnValue: _i9.Future<_i14.SheetCell?>.value(),
+        returnValueForMissingStub: _i9.Future<_i14.SheetCell?>.value(),
+      ) as _i9.Future<_i14.SheetCell?>);
 
   @override
-  _i8.Future<void> insert(_i13.SheetCell? cell) => (super.noSuchMethod(
+  _i9.Future<void> insert(_i14.SheetCell? cell) => (super.noSuchMethod(
         Invocation.method(
           #insert,
           [cell],
         ),
-        returnValue: _i8.Future<void>.value(),
-        returnValueForMissingStub: _i8.Future<void>.value(),
-      ) as _i8.Future<void>);
+        returnValue: _i9.Future<void>.value(),
+        returnValueForMissingStub: _i9.Future<void>.value(),
+      ) as _i9.Future<void>);
 
   @override
-  _i8.Future<void> update(_i13.SheetCell? cell) => (super.noSuchMethod(
+  _i9.Future<void> update(_i14.SheetCell? cell) => (super.noSuchMethod(
         Invocation.method(
           #update,
           [cell],
         ),
-        returnValue: _i8.Future<void>.value(),
-        returnValueForMissingStub: _i8.Future<void>.value(),
-      ) as _i8.Future<void>);
+        returnValue: _i9.Future<void>.value(),
+        returnValueForMissingStub: _i9.Future<void>.value(),
+      ) as _i9.Future<void>);
 
   @override
-  _i8.Future<List<_i13.SheetCell>> findByRowId(String? rowId) =>
+  _i9.Future<List<_i14.SheetCell>> findByRowId(String? rowId) =>
       (super.noSuchMethod(
         Invocation.method(
           #findByRowId,
           [rowId],
         ),
-        returnValue: _i8.Future<List<_i13.SheetCell>>.value(<_i13.SheetCell>[]),
+        returnValue: _i9.Future<List<_i14.SheetCell>>.value(<_i14.SheetCell>[]),
         returnValueForMissingStub:
-            _i8.Future<List<_i13.SheetCell>>.value(<_i13.SheetCell>[]),
-      ) as _i8.Future<List<_i13.SheetCell>>);
+            _i9.Future<List<_i14.SheetCell>>.value(<_i14.SheetCell>[]),
+      ) as _i9.Future<List<_i14.SheetCell>>);
 
   @override
-  _i8.Future<List<_i13.SheetCell>> findByRowIds(List<String>? rowIds) =>
+  _i9.Future<List<_i14.SheetCell>> findByRowIds(List<String>? rowIds) =>
       (super.noSuchMethod(
         Invocation.method(
           #findByRowIds,
           [rowIds],
         ),
-        returnValue: _i8.Future<List<_i13.SheetCell>>.value(<_i13.SheetCell>[]),
+        returnValue: _i9.Future<List<_i14.SheetCell>>.value(<_i14.SheetCell>[]),
         returnValueForMissingStub:
-            _i8.Future<List<_i13.SheetCell>>.value(<_i13.SheetCell>[]),
-      ) as _i8.Future<List<_i13.SheetCell>>);
+            _i9.Future<List<_i14.SheetCell>>.value(<_i14.SheetCell>[]),
+      ) as _i9.Future<List<_i14.SheetCell>>);
 }
 
 /// A class which mocks [CustomerRepository].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockCustomerRepository extends _i1.Mock
-    implements _i14.CustomerRepository {
+    implements _i15.CustomerRepository {
   @override
-  _i8.Future<void> insert(_i5.Customer? customer) => (super.noSuchMethod(
+  _i9.Future<void> insert(_i5.Customer? customer) => (super.noSuchMethod(
         Invocation.method(
           #insert,
           [customer],
         ),
-        returnValue: _i8.Future<void>.value(),
-        returnValueForMissingStub: _i8.Future<void>.value(),
-      ) as _i8.Future<void>);
+        returnValue: _i9.Future<void>.value(),
+        returnValueForMissingStub: _i9.Future<void>.value(),
+      ) as _i9.Future<void>);
 
   @override
-  _i8.Future<_i5.Customer> findById(String? customerId) => (super.noSuchMethod(
+  _i9.Future<_i5.Customer> findById(String? customerId) => (super.noSuchMethod(
         Invocation.method(
           #findById,
           [customerId],
         ),
-        returnValue: _i8.Future<_i5.Customer>.value(_FakeCustomer_3(
+        returnValue: _i9.Future<_i5.Customer>.value(_FakeCustomer_3(
           this,
           Invocation.method(
             #findById,
@@ -445,97 +459,97 @@ class MockCustomerRepository extends _i1.Mock
           ),
         )),
         returnValueForMissingStub:
-            _i8.Future<_i5.Customer>.value(_FakeCustomer_3(
+            _i9.Future<_i5.Customer>.value(_FakeCustomer_3(
           this,
           Invocation.method(
             #findById,
             [customerId],
           ),
         )),
-      ) as _i8.Future<_i5.Customer>);
+      ) as _i9.Future<_i5.Customer>);
 
   @override
-  _i8.Future<List<_i5.Customer>> findByIds(List<String>? customerIds) =>
+  _i9.Future<List<_i5.Customer>> findByIds(List<String>? customerIds) =>
       (super.noSuchMethod(
         Invocation.method(
           #findByIds,
           [customerIds],
         ),
-        returnValue: _i8.Future<List<_i5.Customer>>.value(<_i5.Customer>[]),
+        returnValue: _i9.Future<List<_i5.Customer>>.value(<_i5.Customer>[]),
         returnValueForMissingStub:
-            _i8.Future<List<_i5.Customer>>.value(<_i5.Customer>[]),
-      ) as _i8.Future<List<_i5.Customer>>);
+            _i9.Future<List<_i5.Customer>>.value(<_i5.Customer>[]),
+      ) as _i9.Future<List<_i5.Customer>>);
 
   @override
-  _i8.Future<_i5.Customer?> findByName(String? name) => (super.noSuchMethod(
+  _i9.Future<_i5.Customer?> findByName(String? name) => (super.noSuchMethod(
         Invocation.method(
           #findByName,
           [name],
         ),
-        returnValue: _i8.Future<_i5.Customer?>.value(),
-        returnValueForMissingStub: _i8.Future<_i5.Customer?>.value(),
-      ) as _i8.Future<_i5.Customer?>);
+        returnValue: _i9.Future<_i5.Customer?>.value(),
+        returnValueForMissingStub: _i9.Future<_i5.Customer?>.value(),
+      ) as _i9.Future<_i5.Customer?>);
 }
 
 /// A class which mocks [StaffRepository].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockStaffRepository extends _i1.Mock implements _i15.StaffRepository {
+class MockStaffRepository extends _i1.Mock implements _i16.StaffRepository {
   @override
-  _i8.Future<void> insert(_i6.Staff? staff) => (super.noSuchMethod(
+  _i9.Future<void> insert(_i6.Staff? staff) => (super.noSuchMethod(
         Invocation.method(
           #insert,
           [staff],
         ),
-        returnValue: _i8.Future<void>.value(),
-        returnValueForMissingStub: _i8.Future<void>.value(),
-      ) as _i8.Future<void>);
+        returnValue: _i9.Future<void>.value(),
+        returnValueForMissingStub: _i9.Future<void>.value(),
+      ) as _i9.Future<void>);
 
   @override
-  _i8.Future<_i6.Staff> findById(String? staffId) => (super.noSuchMethod(
+  _i9.Future<_i6.Staff> findById(String? staffId) => (super.noSuchMethod(
         Invocation.method(
           #findById,
           [staffId],
         ),
-        returnValue: _i8.Future<_i6.Staff>.value(_FakeStaff_4(
+        returnValue: _i9.Future<_i6.Staff>.value(_FakeStaff_4(
           this,
           Invocation.method(
             #findById,
             [staffId],
           ),
         )),
-        returnValueForMissingStub: _i8.Future<_i6.Staff>.value(_FakeStaff_4(
+        returnValueForMissingStub: _i9.Future<_i6.Staff>.value(_FakeStaff_4(
           this,
           Invocation.method(
             #findById,
             [staffId],
           ),
         )),
-      ) as _i8.Future<_i6.Staff>);
+      ) as _i9.Future<_i6.Staff>);
 
   @override
-  _i8.Future<List<_i6.Staff>> findAllActive() => (super.noSuchMethod(
+  _i9.Future<List<_i6.Staff>> findAllActive() => (super.noSuchMethod(
         Invocation.method(
           #findAllActive,
           [],
         ),
-        returnValue: _i8.Future<List<_i6.Staff>>.value(<_i6.Staff>[]),
+        returnValue: _i9.Future<List<_i6.Staff>>.value(<_i6.Staff>[]),
         returnValueForMissingStub:
-            _i8.Future<List<_i6.Staff>>.value(<_i6.Staff>[]),
-      ) as _i8.Future<List<_i6.Staff>>);
+            _i9.Future<List<_i6.Staff>>.value(<_i6.Staff>[]),
+      ) as _i9.Future<List<_i6.Staff>>);
 
   @override
-  _i8.Future<_i6.Staff?> findByName(String? name) => (super.noSuchMethod(
+  _i9.Future<_i6.Staff?> findByName(String? name) => (super.noSuchMethod(
         Invocation.method(
           #findByName,
           [name],
         ),
-        returnValue: _i8.Future<_i6.Staff?>.value(),
-        returnValueForMissingStub: _i8.Future<_i6.Staff?>.value(),
-      ) as _i8.Future<_i6.Staff?>);
+        returnValue: _i9.Future<_i6.Staff?>.value(),
+        returnValueForMissingStub: _i9.Future<_i6.Staff?>.value(),
+      ) as _i9.Future<_i6.Staff?>);
 
   @override
-  _i8.Future<void> updateName(
+  _i9.Future<void> updateName(
     String? staffId,
     String? name,
   ) =>
@@ -547,14 +561,14 @@ class MockStaffRepository extends _i1.Mock implements _i15.StaffRepository {
             name,
           ],
         ),
-        returnValue: _i8.Future<void>.value(),
-        returnValueForMissingStub: _i8.Future<void>.value(),
-      ) as _i8.Future<void>);
+        returnValue: _i9.Future<void>.value(),
+        returnValueForMissingStub: _i9.Future<void>.value(),
+      ) as _i9.Future<void>);
 
   @override
-  _i8.Future<void> updateStatus(
+  _i9.Future<void> updateStatus(
     String? staffId,
-    _i10.RecordStatus? status,
+    _i11.RecordStatus? status,
   ) =>
       (super.noSuchMethod(
         Invocation.method(
@@ -564,7 +578,95 @@ class MockStaffRepository extends _i1.Mock implements _i15.StaffRepository {
             status,
           ],
         ),
-        returnValue: _i8.Future<void>.value(),
-        returnValueForMissingStub: _i8.Future<void>.value(),
-      ) as _i8.Future<void>);
+        returnValue: _i9.Future<void>.value(),
+        returnValueForMissingStub: _i9.Future<void>.value(),
+      ) as _i9.Future<void>);
+}
+
+/// A class which mocks [HeaderPriceRepository].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockHeaderPriceRepository extends _i1.Mock
+    implements _i17.HeaderPriceRepository {
+  @override
+  _i9.Future<void> insert(_i7.HeaderPrice? headerPrice) => (super.noSuchMethod(
+        Invocation.method(
+          #insert,
+          [headerPrice],
+        ),
+        returnValue: _i9.Future<void>.value(),
+        returnValueForMissingStub: _i9.Future<void>.value(),
+      ) as _i9.Future<void>);
+
+  @override
+  _i9.Future<_i7.HeaderPrice> findCurrentPrice(
+    String? columnId,
+    DateTime? targetDate,
+  ) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #findCurrentPrice,
+          [
+            columnId,
+            targetDate,
+          ],
+        ),
+        returnValue: _i9.Future<_i7.HeaderPrice>.value(_FakeHeaderPrice_5(
+          this,
+          Invocation.method(
+            #findCurrentPrice,
+            [
+              columnId,
+              targetDate,
+            ],
+          ),
+        )),
+        returnValueForMissingStub:
+            _i9.Future<_i7.HeaderPrice>.value(_FakeHeaderPrice_5(
+          this,
+          Invocation.method(
+            #findCurrentPrice,
+            [
+              columnId,
+              targetDate,
+            ],
+          ),
+        )),
+      ) as _i9.Future<_i7.HeaderPrice>);
+
+  @override
+  _i9.Future<List<_i7.HeaderPrice>> findCurrentPrices(
+    List<String>? columnIds,
+    DateTime? targetDate,
+  ) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #findCurrentPrices,
+          [
+            columnIds,
+            targetDate,
+          ],
+        ),
+        returnValue:
+            _i9.Future<List<_i7.HeaderPrice>>.value(<_i7.HeaderPrice>[]),
+        returnValueForMissingStub:
+            _i9.Future<List<_i7.HeaderPrice>>.value(<_i7.HeaderPrice>[]),
+      ) as _i9.Future<List<_i7.HeaderPrice>>);
+
+  @override
+  _i9.Future<void> closeCurrentPrice(
+    String? priceId,
+    DateTime? effectiveTo,
+  ) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #closeCurrentPrice,
+          [
+            priceId,
+            effectiveTo,
+          ],
+        ),
+        returnValue: _i9.Future<void>.value(),
+        returnValueForMissingStub: _i9.Future<void>.value(),
+      ) as _i9.Future<void>);
 }

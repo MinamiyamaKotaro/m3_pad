@@ -8,11 +8,13 @@ import '../../domain/entities/header.dart';
 import '../../domain/entities/sheet_cell.dart';
 import '../../domain/entities/sheet_row.dart';
 import '../../domain/entities/staff.dart';
+import '../../domain/usecases/header_grouping.dart';
 import 'voucher_add_row_button.dart';
 import 'voucher_cell_field.dart';
 import 'voucher_daily_summary_row.dart';
 import 'voucher_header_row.dart';
 import 'voucher_name_cell.dart';
+import 'voucher_quantity_cell.dart';
 import 'voucher_staff_select_cell.dart';
 import 'voucher_total_cell.dart';
 
@@ -167,7 +169,7 @@ class VoucherSheetGrid extends StatefulWidget {
 
 class _VoucherSheetGridState extends State<VoucherSheetGrid> {
   static const double _nameColWidth = 140;
-  static const double _priceColWidth = 96;
+  static const double _priceColWidth = VoucherHeaderRow.columnWidth;
   static const double _totalColWidth = 140;
   static const double _staffColWidth = 96;
   static const double _headerHeight = 72;
@@ -188,64 +190,32 @@ class _VoucherSheetGridState extends State<VoucherSheetGrid> {
     super.dispose();
   }
 
-  /// 表示・描画順の列一覧を組み立てる。
+  /// 表示・描画順の列グループ一覧を組み立てる。
   ///
   /// 1. `isVisible=true`の列のみを対象とする（非表示列は伝票グリッド上の
   ///    列としては描画しないが、既存セルの数量・単価・合計金額計算には
   ///    影響しない。[_computeRowHeights]・合計金額の算出は全列を対象とする
   ///    ロジック側で行うため）。
-  /// 2. 価格対象の列（`isPriced=true`）を、現在の単価が同額のものが隣接
-  ///    するよう並べ替える（[VoucherHeaderRow](./voucher_header_row.dart)
-  ///    が隣接する同額列を1セルにまとめて改行表示するため）。並べ替えは
-  ///    価格ごとの初出順を保つ安定グルーピングとし、単価未登録・非価格
-  ///    対象の列は元の位置を保つ。
-  /// 3. 非価格対象の列（MEMO）は、常に価格対象の列より後ろに描画する
-  ///    （ヘッダー管理画面で列を追加すると`displayOrder`がMEMOより後ろに
-  ///    なるため、描画順で補正する）。
-  List<Header> get _visibleHeaders {
-    final List<Header> visible = widget.headers
-        .where((final Header header) => header.isVisible)
-        .toList();
-    final List<Header> priced = <Header>[];
-    final List<Header> nonPriced = <Header>[];
-    for (final Header header in visible) {
-      if (header.isPriced) {
-        priced.add(header);
-      } else {
-        nonPriced.add(header);
-      }
-    }
-    return <Header>[..._groupByPrice(priced), ...nonPriced];
-  }
-
-  /// [headers] を、現在の単価（`widget.unitPricesByColumnId`）が同額のもの
-  /// が隣接するよう並べ替える。価格ごとの初出順を保つ安定グルーピングと
-  /// する。
-  List<Header> _groupByPrice(final List<Header> headers) {
-    final Map<int, List<Header>> headersByPrice = <int, List<Header>>{};
-    final List<Object> firstSeenOrder = <Object>[];
-    for (final Header header in headers) {
-      final int? price = widget.unitPricesByColumnId[header.columnId];
-      if (price == null) {
-        firstSeenOrder.add(header);
-        continue;
-      }
-      if (!headersByPrice.containsKey(price)) {
-        headersByPrice[price] = <Header>[];
-        firstSeenOrder.add(price);
-      }
-      headersByPrice[price]!.add(header);
-    }
-    return <Header>[
-      for (final Object key in firstSeenOrder)
-        if (key is Header) key else ...headersByPrice[key as int]!,
-    ];
-  }
+  /// 2. [groupHeadersByPrice]で、現在の単価が同額の価格対象の列を1グループ
+  ///    にまとめる（グループごとにヘッダーセル・個数セルを1つ描画する）。
+  ///    非価格対象の列（MEMO）は常に価格対象の列より後ろに描画する（ヘッダー
+  ///    管理画面で列を追加すると`displayOrder`がMEMOより後ろになるため、
+  ///    描画順で補正する）。
+  List<List<Header>> get _visibleHeaderGroups => groupHeadersByPrice(
+        widget.headers
+            .where((final Header header) => header.isVisible)
+            .toList(),
+        widget.unitPricesByColumnId,
+      );
 
   @override
   Widget build(final BuildContext context) {
-    final List<Header> visibleHeaders = _visibleHeaders;
-    final double middleWidth = _priceColWidth * visibleHeaders.length;
+    final List<List<Header>> headerGroups = _visibleHeaderGroups;
+    final double middleWidth = _priceColWidth *
+        headerGroups.fold<int>(
+          0,
+          (final int count, final List<Header> group) => count + group.length,
+        );
     final List<double> rowHeights = _computeRowHeights(context);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -257,7 +227,7 @@ class _VoucherSheetGridState extends State<VoucherSheetGrid> {
         Expanded(
           child: _buildPriceColumns(
             context,
-            visibleHeaders,
+            headerGroups,
             middleWidth,
             rowHeights,
           ),
@@ -362,7 +332,7 @@ class _VoucherSheetGridState extends State<VoucherSheetGrid> {
 
   Widget _buildPriceColumns(
     final BuildContext context,
-    final List<Header> visibleHeaders,
+    final List<List<Header>> headerGroups,
     final double middleWidth,
     final List<double> rowHeights,
   ) =>
@@ -374,7 +344,7 @@ class _VoucherSheetGridState extends State<VoucherSheetGrid> {
               controller: _horizontal.controllers[0],
               scrollDirection: Axis.horizontal,
               child: VoucherHeaderRow(
-                headers: visibleHeaders,
+                headerGroups: headerGroups,
                 unitPricesByColumnId: widget.unitPricesByColumnId,
               ),
             ),
@@ -393,7 +363,7 @@ class _VoucherSheetGridState extends State<VoucherSheetGrid> {
                         width: middleWidth,
                         child: Row(
                           children: _priceCellsFor(
-                            visibleHeaders,
+                            headerGroups,
                             widget.rows[i],
                             rowHeights[i],
                           ),
@@ -595,7 +565,7 @@ class _VoucherSheetGridState extends State<VoucherSheetGrid> {
   }
 
   List<Widget> _priceCellsFor(
-    final List<Header> visibleHeaders,
+    final List<List<Header>> headerGroups,
     final SheetRow row,
     final double rowHeight,
   ) {
@@ -603,33 +573,91 @@ class _VoucherSheetGridState extends State<VoucherSheetGrid> {
         widget.cellsByRowIdAndColumnId[row.rowId] ??
             const <String, SheetCell>{};
     final bool isEditingRow = widget.editingRowId == row.rowId;
-    return visibleHeaders.map((final Header header) {
-      final SheetCell? cell = cells[header.columnId];
-      final bool isEditingCell =
-          isEditingRow && widget.editingColumnId == header.columnId;
+    return headerGroups.map((final List<Header> group) {
+      final Header header = group.first;
+      final Widget content;
+      if (header.isPriced) {
+        content = _quantityCellFor(group, row, cells);
+      } else {
+        final SheetCell? cell = cells[header.columnId];
+        final bool isEditingCell =
+            isEditingRow && widget.editingColumnId == header.columnId;
+        content = VoucherCellField(
+          header: header,
+          cell: cell,
+          isEditing: isEditingCell,
+          editingText: isEditingCell ? widget.editingText : null,
+          onTap: () => widget.onCellTap(
+            row.rowId,
+            header.columnId,
+            cell?.content ?? '',
+          ),
+          onChanged: widget.onTextChanged,
+          onSubmitted: widget.onCommit,
+        );
+      }
       return Container(
-        width: _priceColWidth,
+        width: _priceColWidth * group.length,
         height: rowHeight,
         decoration: BoxDecoration(border: _cellBorder(context)),
-        child: _verticalCenter(
-          VoucherCellField(
-            header: header,
-            cell: cell,
-            isEditing: isEditingCell,
-            editingText: isEditingCell ? widget.editingText : null,
-            onTap: () => widget.onCellTap(
-              row.rowId,
-              header.columnId,
-              header.isPriced
-                  ? (cell?.quantity?.toString() ?? '')
-                  : (cell?.content ?? ''),
-            ),
-            onChanged: widget.onTextChanged,
-            onSubmitted: widget.onCommit,
-          ),
-        ),
+        child: _verticalCenter(content),
       );
     }).toList();
+  }
+
+  /// 同額の列のグループ（[group]）1つ分の個数セルを生成する。
+  ///
+  /// 表示する個数はグループ内の各列の個数の合計とする（価格改定でグループ
+  /// 構成が変わった場合や、グループ化前に入力された個数も含めるため）。
+  /// 「＋」はグループの先頭の列（代表列）の個数を1増やす。「-」は代表列の
+  /// 個数が1以上なら代表列、0ならグループ内で個数が1以上の最初の列の個数
+  /// を1減らす。
+  Widget _quantityCellFor(
+    final List<Header> group,
+    final SheetRow row,
+    final Map<String, SheetCell> cells,
+  ) {
+    int quantityOf(final Header header) =>
+        cells[header.columnId]?.quantity ?? 0;
+    final int total = group.fold(
+      0,
+      (final int sum, final Header header) => sum + quantityOf(header),
+    );
+    Header? decrementTarget;
+    for (final Header header in group) {
+      if (quantityOf(header) > 0) {
+        decrementTarget = header;
+        break;
+      }
+    }
+    final Header representative = group.first;
+    if (quantityOf(representative) > 0) {
+      decrementTarget = representative;
+    }
+    final Header? target = decrementTarget;
+    return VoucherQuantityCell(
+      quantity: total,
+      onIncrement: () => _commitQuantity(
+        row.rowId,
+        representative,
+        quantityOf(representative) + 1,
+      ),
+      onDecrement: target == null
+          ? null
+          : () => _commitQuantity(row.rowId, target, quantityOf(target) - 1),
+    );
+  }
+
+  /// [header] の列の個数を[next]に更新する。セルのタップ→値変更→確定の
+  /// 順にコールバックを呼び出して即時確定する。
+  void _commitQuantity(
+    final String rowId,
+    final Header header,
+    final int next,
+  ) {
+    widget.onCellTap(rowId, header.columnId, next.toString());
+    widget.onTextChanged(next.toString());
+    widget.onCommit();
   }
 
   Widget _trailingCellsFor(

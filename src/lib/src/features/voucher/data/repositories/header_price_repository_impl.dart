@@ -38,6 +38,18 @@ class HeaderPriceRepositoryImpl implements HeaderPriceRepository {
   }
 
   @override
+  Future<List<HeaderPrice>> findCurrentPrices(
+    final List<String> columnIds,
+    final DateTime targetDate,
+  ) async {
+    final List<HeaderPrice> result = await _dataSource.findCurrentPrices(
+      columnIds,
+      targetDate,
+    );
+    return result;
+  }
+
+  @override
   Future<void> closeCurrentPrice(
     final String priceId,
     final DateTime effectiveTo,

@@ -39,6 +39,40 @@ class HeaderPriceLocalDataSource {
     return HeaderPriceModel.fromMap(rows.first);
   }
 
+  /// 複数の [columnIds] について、[targetDate] 時点で有効な単価を一括取得
+  /// する。列ごとに適用開始日が最も新しい1件のみを返す。単価未登録の列は
+  /// 結果に含まれない。
+  Future<List<HeaderPriceModel>> findCurrentPrices(
+    final List<String> columnIds,
+    final DateTime targetDate,
+  ) async {
+    if (columnIds.isEmpty) {
+      return <HeaderPriceModel>[];
+    }
+    final String target = formatDateOnly(targetDate);
+    final String placeholders = List<String>.filled(
+      columnIds.length,
+      '?',
+    ).join(', ');
+    final List<Map<String, Object?>> rows = await _db.rawQuery(
+      '''
+      SELECT * FROM m_header_price
+      WHERE column_id IN ($placeholders)
+        AND effective_from <= ?
+        AND (effective_to IS NULL OR effective_to > ?)
+      ORDER BY column_id, effective_from DESC
+      ''',
+      <Object?>[...columnIds, target, target],
+    );
+    final Map<String, HeaderPriceModel> latestByColumnId =
+        <String, HeaderPriceModel>{};
+    for (final Map<String, Object?> row in rows) {
+      final HeaderPriceModel model = HeaderPriceModel.fromMap(row);
+      latestByColumnId.putIfAbsent(model.columnId, () => model);
+    }
+    return latestByColumnId.values.toList();
+  }
+
   /// [priceId] の適用終了日を [effectiveTo] に更新する。
   Future<void> closeCurrentPrice(
     final String priceId,

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/utils/currency_format.dart';
 import '../../domain/entities/enums/enums.dart';
 import '../../domain/entities/header.dart';
+import '../../domain/usecases/header_grouping.dart';
 
 /// カテゴリーごとの文字色（FR-6、視認性優先の色分け）。背景色は変えず、
 /// 文字色のみで区別する。
@@ -15,26 +16,28 @@ const Map<HeaderCategory, Color> _categoryTextColors = <HeaderCategory, Color>{
 
 /// 伝票入力画面の列名・単価を固定表示するヘッダー行ウィジェット。
 ///
-/// 紙伝票のヘッダー行固定表示（FR-1）に対応する。現在の単価が同額の列は
-/// 1つのセル内にまとめて改行表示し（FR-6）、カテゴリーごとに文字色を変える
-/// （背景色は変えない）。列名はカテゴリーによらず全て太字で表示する。
-/// 列の並び順（同額グルーピングのための並べ替え・MEMOを末尾に保つ処理）は
-/// 呼び出し元（[VoucherSheetGrid](./voucher_sheet_grid.dart)）が行い、本
-/// ウィジェットは受け取った順序のまま隣接する同額列を1セルにまとめる。
-/// 表示対象の列（`isVisible=true`）のみを受け取る想定で、非表示列の除外も
-/// [VoucherSheetGrid](./voucher_sheet_grid.dart)が行う。画面内でのみ使用
-/// する。
+/// 紙伝票のヘッダー行固定表示（FR-1）に対応する。現在の単価が同額の列の
+/// グループ（[groupHeadersByPrice]の戻り値）ごとに1つのセルを描画し、
+/// グループ内の列名を改行して並べる（FR-6）。列名はそれぞれの列の
+/// カテゴリーの文字色で表示する（背景色は変えない）。単価はグループ内の
+/// カテゴリーが1種類の場合はそのカテゴリーの文字色、複数のカテゴリーが
+/// 混在する場合は黒色で表示する。列名・単価はカテゴリーによらず全て太字
+/// で表示する。グループの組み立て・並び順・非表示列の除外は呼び出し元
+/// （[VoucherSheetGrid](./voucher_sheet_grid.dart)）が行う。画面内で
+/// のみ使用する。
 class VoucherHeaderRow extends StatelessWidget {
   /// [VoucherHeaderRow] を生成する。
   const VoucherHeaderRow({
-    required this.headers,
+    required this.headerGroups,
     required this.unitPricesByColumnId,
     super.key,
   });
 
-  /// 列一覧（表示対象のみ）。`displayOrder`昇順。列名と、`isPriced=true`の
-  /// 列は単価を表示する。
-  final List<Header> headers;
+  /// 1列あたりの幅。グループのセル幅は「列数×本値」とする。
+  static const double columnWidth = 96;
+
+  /// 同額の列のグループ一覧（表示対象の列のみ・描画順）。
+  final List<List<Header>> headerGroups;
 
   /// 列ID別の現在の適用単価Map。`SheetDetail.unitPricesByColumnId`。
   final Map<String, int> unitPricesByColumnId;
@@ -43,7 +46,7 @@ class VoucherHeaderRow extends StatelessWidget {
   void debugFillProperties(final DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
     properties
-      ..add(IterableProperty<Header>('headers', headers))
+      ..add(IterableProperty<List<Header>>('headerGroups', headerGroups))
       ..add(
         DiagnosticsProperty<Map<String, int>>(
           'unitPricesByColumnId',
@@ -52,40 +55,36 @@ class VoucherHeaderRow extends StatelessWidget {
       );
   }
 
-  /// 隣接する列のうち、現在の単価が同額のものを1グループにまとめる。
-  List<List<Header>> _groupByPrice() {
-    final List<List<Header>> groups = <List<Header>>[];
-    for (final Header header in headers) {
-      if (groups.isNotEmpty && _samePrice(groups.last.last, header)) {
-        groups.last.add(header);
-      } else {
-        groups.add(<Header>[header]);
-      }
+  /// [group] の単価の文字色。カテゴリーが1種類の場合はそのカテゴリーの
+  /// 文字色（カテゴリーなしの場合は既定色）、複数混在する場合は黒色。
+  Color? _priceColor(final BuildContext context, final List<Header> group) {
+    final Set<HeaderCategory> categories = <HeaderCategory>{
+      for (final Header header in group) header.category,
+    };
+    if (categories.length > 1) {
+      return Theme.of(context).colorScheme.onSurface;
     }
-    return groups;
-  }
-
-  bool _samePrice(final Header a, final Header b) {
-    if (!a.isPriced || !b.isPriced) {
-      return false;
-    }
-    final int? priceA = unitPricesByColumnId[a.columnId];
-    final int? priceB = unitPricesByColumnId[b.columnId];
-    return priceA != null && priceA == priceB;
+    return _categoryTextColors[group.first.category];
   }
 
   @override
   Widget build(final BuildContext context) {
     final Color outline = Theme.of(context).colorScheme.outline;
     final Color surface = Theme.of(context).colorScheme.surface;
+    final TextStyle? nameStyle = Theme.of(context)
+        .textTheme
+        .labelMedium
+        ?.copyWith(fontWeight: FontWeight.bold);
     return DecoratedBox(
       decoration: BoxDecoration(color: surface),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: _groupByPrice().map((final List<Header> group) {
-          final Color? textColor = _categoryTextColors[group.first.category];
+        children: headerGroups.map((final List<Header> group) {
+          final int? price = group.first.isPriced
+              ? unitPricesByColumnId[group.first.columnId]
+              : null;
           return Container(
-            width: 96.0 * group.length,
+            width: columnWidth * group.length,
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
             decoration: BoxDecoration(
               color: surface,
@@ -97,22 +96,28 @@ class VoucherHeaderRow extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                Text(
-                  group.map((final Header header) => header.name).join('\n'),
+                Text.rich(
+                  TextSpan(
+                    children: <InlineSpan>[
+                      for (int i = 0; i < group.length; i++)
+                        TextSpan(
+                          text: i == 0 ? group[i].name : '\n${group[i].name}',
+                          style: TextStyle(
+                            color: _categoryTextColors[group[i].category],
+                          ),
+                        ),
+                    ],
+                  ),
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: textColor,
-                      ),
+                  style: nameStyle,
                 ),
-                if (group.first.isPriced &&
-                    unitPricesByColumnId.containsKey(group.first.columnId))
+                if (price != null)
                   Text(
-                    formatYen(unitPricesByColumnId[group.first.columnId]!),
+                    formatYen(price),
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: textColor,
+                          color: _priceColor(context, group),
                         ),
                   ),
               ],
