@@ -120,7 +120,13 @@ class VoucherStaffBar extends StatelessWidget {
               children: <Widget>[
                 DropdownButtonHideUnderline(
                   child: DropdownButton<String?>(
-                    value: shift.staffId,
+                    // 一覧にない（論理削除済みの）スタッフは「未定」として
+                    // 表示する。
+                    value: staffRoster.any(
+                      (final Staff staff) => staff.staffId == shift.staffId,
+                    )
+                        ? shift.staffId
+                        : null,
                     isDense: true,
                     hint: const Text('未定'),
                     items: <DropdownMenuItem<String?>>[

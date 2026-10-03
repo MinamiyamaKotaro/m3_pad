@@ -6,6 +6,7 @@
 | 2026-09-27 | minamiyama | お名前の更新を[commitCell](#commitcell)に統合し、担当・決済方法の更新（[setRowStaff](#setrowstaff)・[setRowPaymentMethod](#setrowpaymentmethod)）、スタッフ欄の更新（[setStaffShiftName](#setstaffshiftname)・[startEditingStaffShiftTime](#starteditingstaffshifttime)・[commitStaffShiftTime](#commitstaffshifttime)・[setStaffShiftDrinkBack](#setstaffshiftdrinkback)）を追加（[agents.md](../../../../../../../requried/agents.md)を反映） |
 | 2026-09-29 | minamiyama | [VoucherSheetGrid](../widgets/voucher_sheet_grid.md)導入に伴う呼び出し元の変更（旧`VoucherDataRow`→[VoucherNameCell](../widgets/voucher_name_cell.md)・[VoucherTotalCell](../widgets/voucher_total_cell.md)）を反映してリンクを更新（処理内容自体に変更はない） |
 | 2026-10-03 | minamiyama | [commitStaffShiftTime](#commitstaffshifttime)で入力値を[normalizeHHmm](../../../../core/utils/time_format.md#normalizehhmm)により`HH:mm`形式へ正規化し、形式不正の場合は保存せず`cellInputFailed`を通知するよう変更。保存待ちの間に別の時刻ボタンがタップされた場合に、その編集状態を消さないよう、編集状態の解除を確定対象と一致する場合のみに限定 |
+| 2026-10-03 | minamiyama | 設定画面でのヘッダー・スタッフの変更が伝票に反映されない不具合を修正するため、[refresh](#refresh)を追加 |
 
 ## 処理概要
 
@@ -41,6 +42,9 @@ sequenceDiagram
 
     P->>N: retry()
     N->>N: load()を再実行
+
+    P->>N: refresh()（設定画面から戻った際）
+    N->>GSD: call(sheetInstanceId)
 
     P->>N: addRow(customerId, staffId)
     N->>AR: call(sheetInstanceId, customerId, staffId)
@@ -122,6 +126,38 @@ Error状態からの再試行。[load](#load)を再実行する。
 
 ### 処理詳細
 1. [load](#load)を呼び出す。
+
+## refresh
+
+### 処理概要
+[SettingsMenuPage](../pages/settings_menu_page.md)（ヘッダー・スタッフの追加・更新・削除）から戻った際に呼び出され、表示中の伝票インスタンスを再読込する。[load](#load)と異なり、`status=loading`を挟まない（読込中表示で画面がちらつかないようにするため）。
+
+### input
+
+なし
+
+### output
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | 備考 |
+|---|---|---|---|---|
+| - | - | - | void | 結果は[VoucherSheetState](./voucher_sheet_state.md)の更新として反映される |
+
+### exception
+
+なし（例外は捕捉し`status=error`として状態に反映するため、呼び出し元には送出しない）
+
+### 処理詳細
+1. 条件a: `_sheetInstanceId`が`null`（[load](#load)前）の場合、処理を終了する。\
+   条件b: `null`でない場合、次の手順へ進む。
+2. [GetSheetDetailUsecase.call](../../domain/usecases/get_sheet_detail_usecase.md)を`_sheetInstanceId`で呼び出し、変数`detail`に格納する。\
+   条件a: 例外が送出された場合、`status=error`・`errorMessage`に例外メッセージを設定した状態を反映し、処理を終了する。\
+   条件b: 成功した場合、次のステップへ進む。
+3. 条件a: `detail.rows`が空の場合、`status=empty`・`sheetDetail=detail`とした状態を反映する。\
+   条件b: `detail.rows`が空でない場合、`status=success`・`sheetDetail=detail`とした状態を反映する。
+
+| 変数論理名 | 変数物理名 | データ型 | 格納値 | 備考欄 |
+|---|---|---|---|---|
+| 伝票詳細 | detail | [SheetDetail](../../domain/entities/sheet_detail.md) | [GetSheetDetailUsecase.call](../../domain/usecases/get_sheet_detail_usecase.md)の返却値 | 最新のヘッダー・単価・有効なスタッフ一覧を含む |
 
 ## addRow
 
@@ -473,6 +509,7 @@ Error状態からの再試行。[load](#load)を再実行する。
 | 読込中／loading | [load](#load)成功・行0件 | 空／empty | `sheetDetail`を設定 |
 | 読込中／loading | [load](#load)失敗 | エラー／error | `errorMessage`を設定 |
 | エラー／error | 再試行ボタン押下 | 読込中／loading | [retry](#retry)→[load](#load)を呼び出す |
+| 成功／success, 空／empty | 設定画面から戻る | 成功／success, 空／empty（結果により変化）、失敗時はエラー／error | [refresh](#refresh)を実行し、`sheetDetail`を再設定（読込中／loadingは経由しない） |
 | 成功／success, 空／empty | 行追加ボタン押下 | 成功／success, 空／empty（結果により変化） | [addRow](#addrow)を実行し、成功後`sheetDetail`を再設定。失敗時は状態を変えず`cellInputFailed`副作用を発行 |
 | 成功／success | セルタップ | 成功／success | [startEditingCell](#starteditingcell)で`editingRowId`・`editingColumnId`・`editingText`を設定（状態自体は`success`のまま） |
 | 成功／success（編集中） | テキスト入力変化 | 成功／success | [updateEditingText](#updateeditingtext)で`editingText`を更新 |

@@ -51,6 +51,23 @@ class VoucherSheetNotifier extends Notifier<VoucherSheetState> {
   }) =>
       load(sheetTemplateId: sheetTemplateId, businessDate: businessDate);
 
+  /// 設定画面（ヘッダー・スタッフの追加・更新・削除）から戻った際に
+  /// 呼び出され、表示中の伝票インスタンスを読込中表示を挟まずに再読込する。
+  /// 未読込（[load]前）の場合は何もしない。
+  Future<void> refresh() async {
+    if (_sheetInstanceId == null) {
+      return;
+    }
+    try {
+      await _reload();
+    } on Exception catch (error) {
+      state = state.copyWith(
+        status: VoucherSheetStatus.error,
+        errorMessage: error.toString(),
+      );
+    }
+  }
+
   /// 現在の伝票インスタンスに1組の来店・卓を追加し、表示を更新する。
   Future<void> addRow({final String? customerId, final String? staffId}) =>
       _runOrNotifyFailure(

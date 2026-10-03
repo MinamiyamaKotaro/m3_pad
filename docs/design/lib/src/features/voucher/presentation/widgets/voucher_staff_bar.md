@@ -8,6 +8,7 @@
 | 2026-09-29 | minamiyama | [docs/ui/wireframe](../../../../../../../ui/wireframe/style.css)の`.staffbar__entry`を正として、シフトごとの各エントリを角丸の点線枠（`CustomPainter`による自前描画）で囲むよう変更 |
 | 2026-10-03 | minamiyama | 時刻入力欄がEnter（キーボードの完了）でしか確定されず、欄の外をタップすると未保存のまま現在時刻表示に戻っていた不具合を修正。入力欄を`_StaffTimeField`として切り出し、欄の外のタップ・フォーカス喪失でも確定するよう変更（[docs/ui/wireframe](../../../../../../../ui/wireframe/app.js)の`change`・`blur`での確定に合わせる）。現在時刻の表示を端末の12/24時間表記設定に依存しない[formatHHmm](../../../../core/utils/time_format.md#formathhmm)に変更し、`_timeButton`への`context`の引き回しを廃止 |
 | 2026-10-03 | minamiyama | ドリンクバック入力欄がEnterでしか確定されず、再描画のたびに入力欄が作り直されていた不具合を修正。`_DrinkBackField`として切り出し、自由記述（string型）のまま、欄の外のタップ・フォーカス喪失でも変更がある場合に確定するよう変更 |
+| 2026-10-03 | minamiyama | 論理削除済みのスタッフがシフトに設定されている場合、氏名プルダウンの値が選択肢に存在せず例外となるため、「未定」として表示するよう変更 |
 
 ## 概要
 
@@ -37,6 +38,7 @@ classDiagram
 
 ## 表示ルール
 
+- 氏名プルダウンは`staffRoster`（有効なスタッフ）から選択する。`shift.staffId`が`staffRoster`に含まれない場合（論理削除済みのスタッフ）は「未定」を選択状態として表示する（保存値は変更しない）。
 - 担当スタッフ（`shift.staffId`）が未定（`null`）の場合、就業開始/終了時刻ボタンは空白表示とし、タップによる編集を受け付けない（氏名選択後に初めて時刻の入力・修正が可能になる）。
 - 担当スタッフが選択済みの場合、就業開始/終了時刻ボタンは`shift.startTime`/`shift.endTime`が`null`のとき現在時刻（`HH:mm`）を表示する（保存値ではなく表示上の初期値。値を確定するまでDBには反映しない）。
 - `editingStaffShiftId`が対象シフトの`shiftId`と一致し、かつ`editingStaffShiftField`が対象項目と一致する場合のみ、ボタンの代わりに時刻入力欄（`_StaffTimeField`）を表示する。入力欄の初期値はボタンの表示値（保存値、未入力時は現在時刻）とする。

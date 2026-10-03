@@ -8,6 +8,7 @@
 | 2026-09-29 | minamiyama | 営業日の表示をタップ可能にし、`showDatePicker`によるカレンダー選択に対応。選択した日付に応じて[VoucherSheetNotifier.load](../controllers/voucher_sheet_notifier.md#load)を再実行する。表示形式を「M月D日」から「M月D日 X曜日」（日本語の曜日名）に変更 |
 | 2026-09-29 | minamiyama | 営業日の表示形式を「M月D日 X曜日」から「YYYY年M月D日 X曜日」に変更 |
 | 2026-09-29 | minamiyama | AppBarのアクションに設定アイコンを追加し、[SettingsMenuPage](./settings_menu_page.md)（`MMM_002_VOUCHER`）への遷移を追加（ヘッダー管理・スタッフ管理・CSV期間出力機能、FR-6・FR-7・FR-3） |
+| 2026-10-03 | minamiyama | 設定画面から戻った際に[VoucherSheetNotifier.refresh](../controllers/voucher_sheet_notifier.md#refresh)を呼び出し、ヘッダー・スタッフの変更を伝票に反映するよう変更 |
 
 ## 画面ID
 
@@ -59,7 +60,7 @@
 
 - 先頭（leading）: 紙伝票フォーマット名の丸バッジ（`CircleAvatar`、背景・文字色は`colorScheme.onPrimary`/`colorScheme.primary`でAppBarの配色と反転させる）。
 - タイトル: 「伝票入力」＋画面ID「MMM_001_VOUCHER」の2段表示。
-- アクション: 営業日（「YYYY年M月D日 X曜日」形式）、CSV出力ボタン、設定アイコン。営業日タップで`showDatePicker`（カレンダー）を表示し、選択した日付で[VoucherSheetNotifier.load](../controllers/voucher_sheet_notifier.md#load)を再実行して該当営業日の伝票を読み込み直す。CSV出力ボタン押下で[VoucherSheetNotifier.exportCsv](../controllers/voucher_sheet_notifier.md#exportcsv)を呼び出す。`isExporting=true`の間はボタンをインジケータ表示に切り替え、多重押下を防止する。設定アイコン（`Icons.settings`）押下で`Navigator.push`により[SettingsMenuPage](./settings_menu_page.md)へ遷移する（`sheetTemplateId`を引き継ぐ）。
+- アクション: 営業日（「YYYY年M月D日 X曜日」形式）、CSV出力ボタン、設定アイコン。営業日タップで`showDatePicker`（カレンダー）を表示し、選択した日付で[VoucherSheetNotifier.load](../controllers/voucher_sheet_notifier.md#load)を再実行して該当営業日の伝票を読み込み直す。CSV出力ボタン押下で[VoucherSheetNotifier.exportCsv](../controllers/voucher_sheet_notifier.md#exportcsv)を呼び出す。`isExporting=true`の間はボタンをインジケータ表示に切り替え、多重押下を防止する。設定アイコン（`Icons.settings`）押下で`Navigator.push`により[SettingsMenuPage](./settings_menu_page.md)へ遷移する（`sheetTemplateId`を引き継ぐ）。設定画面から戻った際は、ヘッダー・スタッフの追加・更新・削除を反映するため[VoucherSheetNotifier.refresh](../controllers/voucher_sheet_notifier.md#refresh)を呼び出す。
 - 配色: `AppBarTheme`（`backgroundColor`/`foregroundColor`）により、[docs/ui/wireframe](../../../../../../../ui/wireframe/style.css)の`--color-primary`/`--color-primary-contrast`と同じ配色（黒背景・オフホワイト文字）とする。
 
 ## 行追加ボタンの配置

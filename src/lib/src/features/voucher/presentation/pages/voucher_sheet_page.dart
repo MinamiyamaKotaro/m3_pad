@@ -99,6 +99,22 @@ class _VoucherSheetPageState extends ConsumerState<VoucherSheetPage> {
         .load(sheetTemplateId: widget.sheetTemplateId, businessDate: picked);
   }
 
+  /// 設定画面へ遷移し、戻った際にヘッダー・スタッフの変更を反映するため
+  /// 伝票を再読込する。
+  Future<void> _openSettings() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (final BuildContext context) => SettingsMenuPage(
+          sheetTemplateId: widget.sheetTemplateId,
+        ),
+      ),
+    );
+    if (!mounted) {
+      return;
+    }
+    await ref.read(voucherSheetNotifierProvider.notifier).refresh();
+  }
+
   @override
   Widget build(final BuildContext context) {
     ref.listen<VoucherSheetEffect?>(voucherSheetEffectProvider, (
@@ -172,13 +188,7 @@ class _VoucherSheetPageState extends ConsumerState<VoucherSheetPage> {
           ),
           IconButton(
             icon: const Icon(Icons.settings),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (final BuildContext context) => SettingsMenuPage(
-                  sheetTemplateId: widget.sheetTemplateId,
-                ),
-              ),
-            ),
+            onPressed: _openSettings,
           ),
         ],
       ),
