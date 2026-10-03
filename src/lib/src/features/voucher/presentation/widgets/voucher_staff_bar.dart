@@ -174,11 +174,11 @@ class VoucherStaffBar extends StatelessWidget {
     if (isEditing) {
       return SizedBox(
         width: 72,
-        child: TextField(
+        child: TextFormField(
           autofocus: true,
-          controller: TextEditingController(text: value ?? now),
+          initialValue: value ?? now,
           decoration: const InputDecoration(isDense: true),
-          onSubmitted: onTimeCommit,
+          onFieldSubmitted: onTimeCommit,
         ),
       );
     }

@@ -56,11 +56,11 @@ class VoucherNameCell extends StatelessWidget {
     if (isEditing) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 4),
-        child: TextField(
+        child: TextFormField(
           autofocus: true,
-          controller: TextEditingController(text: editingText ?? ''),
+          initialValue: editingText ?? '',
           onChanged: onChanged,
-          onSubmitted: (final String _) => onSubmitted(),
+          onFieldSubmitted: (final String _) => onSubmitted(),
         ),
       );
     }

@@ -65,14 +65,11 @@ class VoucherCellField extends StatelessWidget {
     }
 
     if (isEditing) {
-      return TextField(
+      return TextFormField(
         autofocus: true,
-        controller: TextEditingController(text: editingText ?? '')
-          ..selection = TextSelection.collapsed(
-            offset: (editingText ?? '').length,
-          ),
+        initialValue: editingText ?? '',
         onChanged: onChanged,
-        onSubmitted: (final String _) => onSubmitted(),
+        onFieldSubmitted: (final String _) => onSubmitted(),
         decoration: const InputDecoration(
           isDense: true,
           contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),

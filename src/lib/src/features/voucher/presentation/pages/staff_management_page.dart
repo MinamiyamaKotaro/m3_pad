@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -41,31 +42,10 @@ class _StaffManagementPageState extends ConsumerState<StaffManagementPage> {
   }
 
   Future<void> _showStaffForm({final Staff? staff}) async {
-    final TextEditingController controller = TextEditingController(
-      text: staff?.name ?? '',
-    );
     final String? name = await showDialog<String>(
       context: context,
-      builder: (final BuildContext context) => AlertDialog(
-        title: Text(staff == null ? 'スタッフを追加' : 'スタッフを編集'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: const InputDecoration(labelText: '氏名'),
-        ),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('キャンセル'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(controller.text),
-            child: const Text('保存'),
-          ),
-        ],
-      ),
+      builder: (final BuildContext context) => _StaffFormDialog(staff: staff),
     );
-    controller.dispose();
     if (name == null || !mounted) {
       return;
     }
@@ -179,4 +159,62 @@ class _StaffManagementPageState extends ConsumerState<StaffManagementPage> {
         );
     }
   }
+}
+
+/// スタッフの追加・編集フォームダイアログ。
+///
+/// 氏名入力欄の[TextEditingController]は、ダイアログが閉じるアニメーションの
+/// 完了後（Stateの`dispose`時）に破棄する。`showDialog`の戻り直後に破棄すると、
+/// 閉じるアニメーション中の再描画で破棄済みのコントローラーが参照され例外となる
+/// ため、State側で所有する。
+class _StaffFormDialog extends StatefulWidget {
+  const _StaffFormDialog({this.staff});
+
+  /// 編集対象のスタッフ。追加の場合は`null`。
+  final Staff? staff;
+
+  @override
+  void debugFillProperties(final DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DiagnosticsProperty<Staff?>('staff', staff));
+  }
+
+  @override
+  State<_StaffFormDialog> createState() => _StaffFormDialogState();
+}
+
+class _StaffFormDialogState extends State<_StaffFormDialog> {
+  late final TextEditingController _nameController;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.staff?.name ?? '');
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(final BuildContext context) => AlertDialog(
+        title: Text(widget.staff == null ? 'スタッフを追加' : 'スタッフを編集'),
+        content: TextField(
+          controller: _nameController,
+          autofocus: true,
+          decoration: const InputDecoration(labelText: '氏名'),
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('キャンセル'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(_nameController.text),
+            child: const Text('保存'),
+          ),
+        ],
+      );
 }

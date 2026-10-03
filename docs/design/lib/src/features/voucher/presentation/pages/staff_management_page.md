@@ -29,7 +29,7 @@
 
 | ウィジェット | 役割 |
 |---|---|
-| `_showStaffForm`ダイアログ（`AlertDialog`＋`TextField`） | スタッフの追加・編集フォーム。`staff`引数が`null`の場合は追加、非`null`の場合は編集として、氏名入力欄に既存値を初期表示する |
+| `_StaffFormDialog`（`AlertDialog`＋`TextField`） | スタッフの追加・編集フォーム。`staff`引数が`null`の場合は追加、非`null`の場合は編集として、氏名入力欄に既存値を初期表示する。保存時は入力した氏名を`Navigator.pop`で返す。氏名入力欄の`TextEditingController`はStateで保持し、Stateの`dispose`時に破棄する（`showDialog`の戻り直後に破棄すると、閉じるアニメーション中に破棄済みのコントローラーが参照され例外となるため） |
 | `_confirmRemove`ダイアログ（`AlertDialog`） | 削除確認ダイアログ。「削除」押下で[StaffManagementNotifier.removeStaff](../controllers/staff_management_notifier.md#removestaff)を呼び出す |
 
 ## 共通UIコンポーネントの利用
