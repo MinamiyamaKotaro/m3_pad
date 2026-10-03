@@ -5,6 +5,7 @@
 | 2026-09-25 | minamiyama | 新規作成 |
 | 2026-09-27 | minamiyama | `update`を追加 |
 | 2026-09-29 | minamiyama | `findByInstanceIds`を追加（FR-3） |
+| 2026-10-03 | minamiyama | お名前の登録後も初来店の伝票で「NEW」マークを表示するため、`findCustomerIdsVisitedBefore`を追加 |
 
 ## 処理概要
 
@@ -179,3 +180,28 @@ sequenceDiagram
 
 ### 処理詳細
 1. [SheetRowLocalDataSource.findByInstanceIds](../datasources/sheet_row_local_datasource.md)を呼び出し、結果をそのまま返却する。
+
+## findCustomerIdsVisitedBefore
+
+### 処理概要
+[SheetRowLocalDataSource.findCustomerIdsVisitedBefore](../datasources/sheet_row_local_datasource.md#findcustomeridsvisitedbefore)に処理を委譲する。
+
+### input
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | バリデーション | 備考 |
+|---|---|---|---|---|---|
+| 顧客ID一覧 | customerIds | list | string | 必須 | 空の場合は空リストを返す |
+| 営業日 | businessDate | - | DateTime | 必須, 日付のみ | この日より前（当日を含まない）の来店履歴を検索する |
+
+### output
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | 備考 |
+|---|---|---|---|---|
+| 来店履歴がある顧客ID一覧 | - | list | string | 重複なし。含まれない顧客は`businessDate`が初来店の新規客 |
+
+### exception
+
+なし
+
+### 処理詳細
+1. [SheetRowLocalDataSource.findCustomerIdsVisitedBefore](../datasources/sheet_row_local_datasource.md#findcustomeridsvisitedbefore)を呼び出し、結果をそのまま返却する。

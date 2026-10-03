@@ -55,6 +55,18 @@ class SheetRowRepositoryImpl implements SheetRowRepository {
     return result;
   }
 
+  @override
+  Future<List<String>> findCustomerIdsVisitedBefore(
+    final List<String> customerIds,
+    final DateTime businessDate,
+  ) async {
+    final List<String> result = await _dataSource.findCustomerIdsVisitedBefore(
+      customerIds,
+      businessDate,
+    );
+    return result;
+  }
+
   SheetRowModel _toModel(final SheetRow row) => SheetRowModel(
         rowId: row.rowId,
         sheetInstanceId: row.sheetInstanceId,

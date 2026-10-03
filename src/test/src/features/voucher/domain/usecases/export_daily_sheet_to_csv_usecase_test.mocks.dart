@@ -361,6 +361,23 @@ class MockSheetRowRepository extends _i1.Mock
         returnValueForMissingStub:
             _i9.Future<List<_i4.SheetRow>>.value(<_i4.SheetRow>[]),
       ) as _i9.Future<List<_i4.SheetRow>>);
+
+  @override
+  _i9.Future<List<String>> findCustomerIdsVisitedBefore(
+    List<String>? customerIds,
+    DateTime? businessDate,
+  ) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #findCustomerIdsVisitedBefore,
+          [
+            customerIds,
+            businessDate,
+          ],
+        ),
+        returnValue: _i9.Future<List<String>>.value(<String>[]),
+        returnValueForMissingStub: _i9.Future<List<String>>.value(<String>[]),
+      ) as _i9.Future<List<String>>);
 }
 
 /// A class which mocks [SheetCellRepository].

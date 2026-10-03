@@ -25,4 +25,12 @@ abstract interface class SheetRowRepository {
   Future<List<SheetRow>> findByInstanceIds(
     final List<String> sheetInstanceIds,
   );
+
+  /// [customerIds] のうち、[businessDate] より前の営業日の伝票に行が存在する
+  /// （来店履歴がある）顧客IDを一括取得する。結果に含まれない顧客は、
+  /// [businessDate] が初来店の新規客とみなす。
+  Future<List<String>> findCustomerIdsVisitedBefore(
+    final List<String> customerIds,
+    final DateTime businessDate,
+  );
 }

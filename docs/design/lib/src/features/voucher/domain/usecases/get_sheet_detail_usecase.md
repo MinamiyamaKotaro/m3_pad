@@ -4,6 +4,7 @@
 |---|---|---|
 | 2026-09-25 | minamiyama | 新規作成（presentation層の画面表示用に追加） |
 | 2026-09-27 | minamiyama | `staffShifts`・`dailySummary`・`staffRoster`・`customersById`の取得を追加（[agents.md](../../../../../../../requried/agents.md)のスタッフ欄・日機能要件・お名前列仕様を反映） |
+| 2026-10-03 | minamiyama | お名前の登録後も初来店の伝票で「NEW」マークを表示するため、`newCustomerIds`（本伝票の営業日が初来店の顧客ID）の算出を追加 |
 
 ## 処理概要
 
@@ -33,6 +34,7 @@ sequenceDiagram
     U->>DPS: getByInstanceId(sheetInstanceId, instance.businessDate)
     U->>StR: findAllActive()
     U->>CR: findByIds(customerIds)
+    U->>SRR: findCustomerIdsVisitedBefore(customerIds, instance.businessDate)
 ```
 
 ## call
@@ -71,7 +73,9 @@ sequenceDiagram
 10. `rows`から`customerId`が非`null`のものを抽出し、変数`customerIds`（リスト）に格納する（メモリ内処理、DBアクセスなし）。
 11. [CustomerRepository.findByIds](../repositories/customer_repository.md)を`customerIds`で呼び出し、変数`customers`に格納する。
 12. `customers`を`customerId`をキーとしたMapへ変換し、変数`customersById`に格納する（「お名前」列の氏名表示用の事前変換）。
-13. `instance`・`headers`・`rows`・`cellsByRowIdAndColumnId`・`staffShifts`・`dailySummary`・`staffRoster`・`customersById`から[SheetDetail](../entities/sheet_detail.md)を組み立て、返却する。
+13. [SheetRowRepository.findCustomerIdsVisitedBefore](../repositories/sheet_row_repository.md)を`customerIds`・`instance.businessDate`で呼び出し、変数`visitedCustomerIds`に格納する（顧客ごとにループしてDBを呼び出すことはしない）。
+14. `customerIds`から`visitedCustomerIds`を除いた集合を変数`newCustomerIds`に格納する（本伝票の営業日が初来店の新規客。「お名前」列の「NEW」マーク表示用）。
+15. （単価の取得は既存処理のとおり）`instance`・`headers`・`rows`・`cellsByRowIdAndColumnId`・`staffShifts`・`dailySummary`・`staffRoster`・`customersById`・`unitPricesByColumnId`・`newCustomerIds`から[SheetDetail](../entities/sheet_detail.md)を組み立て、返却する。
 
 ### 変数一覧
 
@@ -89,3 +93,5 @@ sequenceDiagram
 | 顧客IDリスト | customerIds | list\<string\> | `rows`から抽出した`customerId`（非`null`のみ）の一覧 | 顧客一括取得のキー |
 | 顧客一覧 | customers | list<[Customer](../entities/customer.md)> | [CustomerRepository.findByIds](../repositories/customer_repository.md)の返却値 | - |
 | 顧客ID別顧客Map | customersById | map<string, [Customer](../entities/customer.md)> | `customers`を`customerId`→Customerへ変換した結果 | O(1)参照のための事前変換結果 |
+| 来店履歴がある顧客ID一覧 | visitedCustomerIds | list\<string\> | [SheetRowRepository.findCustomerIdsVisitedBefore](../repositories/sheet_row_repository.md)の返却値 | 本伝票の営業日より前に来店履歴がある顧客 |
+| 新規客の顧客ID一覧 | newCustomerIds | set\<string\> | `customerIds`から`visitedCustomerIds`を除いた集合 | 初来店の顧客 |

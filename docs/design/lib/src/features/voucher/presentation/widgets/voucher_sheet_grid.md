@@ -9,6 +9,7 @@
 | 2026-09-29 | minamiyama | 現在の単価が同額の列が元々隣接していない場合にグルーピング表示（[VoucherHeaderRow](./voucher_header_row.md)）が成立していなかった不具合を修正するため、`_visibleHeaders`に同額の価格対象列を隣接させる並べ替え（`_groupByPrice`、価格ごとの初出順を保つ安定グルーピング）を追加。あわせて、非価格対象の列（MEMO）を常に価格対象の列より後ろに描画するようにし、ヘッダー管理画面での列追加によりMEMOより後ろに新しい列が描画されないようにした |
 | 2026-09-29 | minamiyama | 「お名前」「合計金額」「担当」のヘッダー見出しを太字（`FontWeight.bold`）表示に変更（[VoucherHeaderRow](./voucher_header_row.md)側の列名太字化と合わせ、全ヘッダー見出しを太字に統一） |
 | 2026-10-03 | minamiyama | 個数セルを同額の列のグループにつき1つにするため、`_visibleHeaders`・`_groupByPrice`を`_visibleHeaderGroups`（[groupHeadersByPrice](../../domain/usecases/header_grouping.md#groupheadersbyprice)を使用）に置き換え。価格対象のグループは[VoucherQuantityCell](./voucher_quantity_cell.md)を1つ（幅`96px × グループ内列数`）描画し、個数はグループの先頭の列（代表列）に保存する。MEMO列は引き続き[VoucherCellField](./voucher_cell_field.md)で描画する |
+| 2026-10-03 | minamiyama | お名前の登録後も初来店の伝票で「NEW」マークを表示するため、`newCustomerIds`（[SheetDetail.newCustomerIds](../../domain/entities/sheet_detail.md)）を受け取り、[VoucherNameCell](./voucher_name_cell.md)の`isNewCustomer`（`customerId`が`null`、または`newCustomerIds`に含まれる場合に`true`）を渡すよう変更 |
 
 ## 概要
 
@@ -48,6 +49,7 @@ classDiagram
 | 行ID・列ID別セルMap | cellsByRowIdAndColumnId | map | string(key), map(value) | 必須 | `sheetDetail.cellsByRowIdAndColumnId`をそのまま渡す |
 | スタッフ選択肢一覧 | staffRoster | list | [Staff](../../domain/entities/staff.md) | 必須 | 「担当」列プルダウンの選択肢。`sheetDetail.staffRoster`をそのまま渡す |
 | 顧客ID別顧客Map | customersById | map | string(key), [Customer](../../domain/entities/customer.md)(value) | 必須 | 「お名前」列の氏名表示用。`sheetDetail.customersById`をそのまま渡す |
+| 新規客の顧客ID一覧 | newCustomerIds | set | string | 必須 | [SheetDetail.newCustomerIds](../../domain/entities/sheet_detail.md)。「お名前」列の「NEW」マーク表示用 |
 | 日次集計 | dailySummary | - | [DailyPaymentSummary](../../domain/entities/daily_payment_summary.md) | 必須 | `sheetDetail.dailySummary`をそのまま渡す |
 | 編集中の行ID | editingRowId | optional | string | 任意 | [VoucherSheetState.editingRowId](../controllers/voucher_sheet_state.md)をそのまま渡す |
 | 編集中の列ID | editingColumnId | optional | string | 任意 | [VoucherSheetState.editingColumnId](../controllers/voucher_sheet_state.md)をそのまま渡す。「お名前」列編集中の場合は特別な値`'customerName'` |

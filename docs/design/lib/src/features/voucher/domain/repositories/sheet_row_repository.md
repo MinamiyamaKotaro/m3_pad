@@ -5,6 +5,7 @@
 | 2026-09-25 | minamiyama | 新規作成（domain層インターフェースとして定義） |
 | 2026-09-27 | minamiyama | `update`を追加（お名前・担当・決済方法の後からの変更に対応、[UpdateRowUsecase](../usecases/update_row_usecase.md)参照） |
 | 2026-09-29 | minamiyama | `findByInstanceIds`を追加（複数営業日分の一括取得、[ExportSheetsToCsvByDateRangeUsecase](../usecases/export_sheets_to_csv_by_date_range_usecase.md)参照、FR-3） |
+| 2026-10-03 | minamiyama | お名前の登録後も初来店の伝票で「NEW」マークを表示するため、`findCustomerIdsVisitedBefore`を追加（[GetSheetDetailUsecase](../usecases/get_sheet_detail_usecase.md)参照） |
 
 ## 概要
 
@@ -143,6 +144,29 @@
 | 項目論理名 | 項目物理名 | カプセルの型 | データ型 | 備考 |
 |---|---|---|---|---|
 | 行一覧 | - | list | [SheetRow](../entities/sheet_row.md) | `sheetInstanceId`・`rowOrder`昇順。該当なしの場合は空リスト |
+
+#### exception
+
+なし
+
+### findCustomerIdsVisitedBefore
+
+| 項目 | 内容 |
+|---|---|
+| シグネチャ | `Future<List<String>> findCustomerIdsVisitedBefore(List<String> customerIds, DateTime businessDate)` |
+
+#### input
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | バリデーション | 備考 |
+|---|---|---|---|---|---|
+| 顧客ID一覧 | customerIds | list | string | 必須 | 空の場合は空リストを返す |
+| 営業日 | businessDate | - | DateTime | 必須, 日付のみ | この日より前（当日を含まない）の来店履歴を検索する |
+
+#### output
+
+| 項目論理名 | 項目物理名 | カプセルの型 | データ型 | 備考 |
+|---|---|---|---|---|
+| 来店履歴がある顧客ID一覧 | - | list | string | 重複なし。含まれない顧客は`businessDate`が初来店の新規客 |
 
 #### exception
 

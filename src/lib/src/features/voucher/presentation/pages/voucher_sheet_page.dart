@@ -258,6 +258,7 @@ class _VoucherSheetPageState extends ConsumerState<VoucherSheetPage> {
                 cellsByRowIdAndColumnId: detail.cellsByRowIdAndColumnId,
                 staffRoster: detail.staffRoster,
                 customersById: detail.customersById,
+                newCustomerIds: detail.newCustomerIds,
                 dailySummary: detail.dailySummary,
                 editingRowId: state.editingRowId,
                 editingColumnId: state.editingColumnId,

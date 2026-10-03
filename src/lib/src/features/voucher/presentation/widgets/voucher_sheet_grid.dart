@@ -38,6 +38,7 @@ class VoucherSheetGrid extends StatefulWidget {
     required this.cellsByRowIdAndColumnId,
     required this.staffRoster,
     required this.customersById,
+    required this.newCustomerIds,
     required this.dailySummary,
     required this.onCellTap,
     required this.onTextChanged,
@@ -68,6 +69,9 @@ class VoucherSheetGrid extends StatefulWidget {
 
   /// 顧客ID別顧客Map。「お名前」列の氏名表示用。
   final Map<String, Customer> customersById;
+
+  /// 本伝票の営業日が初来店の顧客ID一覧。「お名前」列の「NEW」マーク表示用。
+  final Set<String> newCustomerIds;
 
   /// 日次集計。
   final DailyPaymentSummary dailySummary;
@@ -126,6 +130,7 @@ class VoucherSheetGrid extends StatefulWidget {
           customersById,
         ),
       )
+      ..add(IterableProperty<String>('newCustomerIds', newCustomerIds))
       ..add(
         DiagnosticsProperty<DailyPaymentSummary>(
           'dailySummary',
@@ -548,6 +553,11 @@ class _VoucherSheetGridState extends State<VoucherSheetGrid> {
         children: <Widget>[child],
       );
 
+  /// 「NEW」マークを付けるかどうか。顧客未登録（`customerId=null`）、または
+  /// 本伝票の営業日が初来店の顧客の場合に`true`。
+  bool _isNewCustomer(final String? customerId) =>
+      customerId == null || widget.newCustomerIds.contains(customerId);
+
   Widget _nameCellFor(final SheetRow row) {
     final bool isEditingName = widget.editingRowId == row.rowId &&
         widget.editingColumnId == 'customerName';
@@ -555,6 +565,7 @@ class _VoucherSheetGridState extends State<VoucherSheetGrid> {
         row.customerId == null ? null : widget.customersById[row.customerId];
     return VoucherNameCell(
       customer: customer,
+      isNewCustomer: _isNewCustomer(row.customerId),
       isEditing: isEditingName,
       editingText: isEditingName ? widget.editingText : null,
       onTap: () =>

@@ -25,6 +25,7 @@ class SheetDetail {
     required this.staffRoster,
     required this.customersById,
     required this.unitPricesByColumnId,
+    required this.newCustomerIds,
   });
 
   /// 伝票インスタンス。
@@ -55,4 +56,8 @@ class SheetDetail {
   /// 列ID別の現在の適用単価Map。キー=columnId。`isPriced=true`の列のみ
   /// キーが存在する。ヘッダー行の単価表示用。
   final Map<String, int> unitPricesByColumnId;
+
+  /// 本伝票の営業日が初来店（それより前の営業日の伝票に行がない）の顧客ID
+  /// 一覧。「お名前」列の「NEW」マーク表示用。
+  final Set<String> newCustomerIds;
 }
