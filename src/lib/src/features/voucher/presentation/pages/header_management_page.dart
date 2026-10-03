@@ -244,45 +244,47 @@ class _HeaderFormDialogState extends State<_HeaderFormDialog> {
   @override
   Widget build(final BuildContext context) => AlertDialog(
         title: Text(widget.header == null ? '列を追加' : '列を編集'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            TextField(
-              controller: _nameController,
-              autofocus: true,
-              decoration: const InputDecoration(labelText: '項目'),
-            ),
-            DropdownButtonFormField<HeaderCategory>(
-              initialValue: _category,
-              decoration: const InputDecoration(labelText: 'カテゴリー'),
-              items: _categoryLabels.entries
-                  .map(
-                    (final MapEntry<HeaderCategory, String> entry) =>
-                        DropdownMenuItem<HeaderCategory>(
-                      value: entry.key,
-                      child: Text(entry.value),
-                    ),
-                  )
-                  .toList(),
-              onChanged: (final HeaderCategory? value) {
-                if (value == null) {
-                  return;
-                }
-                setState(() => _category = value);
-              },
-            ),
-            TextField(
-              controller: _priceController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: '価格'),
-            ),
-            SwitchListTile(
-              title: const Text('表示する'),
-              value: _isVisible,
-              onChanged: (final bool value) =>
-                  setState(() => _isVisible = value),
-            ),
-          ],
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              TextField(
+                controller: _nameController,
+                autofocus: true,
+                decoration: const InputDecoration(labelText: '項目'),
+              ),
+              DropdownButtonFormField<HeaderCategory>(
+                initialValue: _category,
+                decoration: const InputDecoration(labelText: 'カテゴリー'),
+                items: _categoryLabels.entries
+                    .map(
+                      (final MapEntry<HeaderCategory, String> entry) =>
+                          DropdownMenuItem<HeaderCategory>(
+                        value: entry.key,
+                        child: Text(entry.value),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (final HeaderCategory? value) {
+                  if (value == null) {
+                    return;
+                  }
+                  setState(() => _category = value);
+                },
+              ),
+              TextField(
+                controller: _priceController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: '価格'),
+              ),
+              SwitchListTile(
+                title: const Text('表示する'),
+                value: _isVisible,
+                onChanged: (final bool value) =>
+                    setState(() => _isVisible = value),
+              ),
+            ],
+          ),
         ),
         actions: <Widget>[
           TextButton(
